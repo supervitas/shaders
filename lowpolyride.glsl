@@ -128,11 +128,11 @@ float sdOctahedron(in vec3 p, in float s) {
 float sdHexPrism( vec3 p, vec2 h ) {
     const vec3 k = vec3(-0.8660254, 0.5, 0.57735);
     p = abs(p);
-    p.xy -= 2.0*min(dot(k.xy, p.xy), 0.0)*k.xy;
-    vec2 d = vec2(
-       length(p.xy-vec2(clamp(p.x,-k.z*h.x,k.z*h.x), h.x))*sign(p.y-h.x),
+    p.xy -= 2.0*min(dot(k.xy, p.xy), 0.)*k.xy;
+    vec2 d = vec2(length(p.xy-vec2(clamp(p.x,-k.z*h.x,k.z*h.x), h.x))*sign(p.y-h.x),
        p.z-h.y );
-    return min(max(d.x,d.y),0.0) + length(max(d,0.0));
+
+    return min(max(d.x,d.y), 0.0) + length(max(d, 0.0));
 }
 
 
@@ -194,6 +194,16 @@ vec2 tree3(vec3 p) {
   return unionSDF(trunc, leaf);
 }
 
+vec2 tree4(vec3 p) {
+  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
+  vec2 leaf = vec2(sdOctahedron(p + vec3(0., -3, 0.), 2.120), 1.0);
+  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -4.7, 0.), 1.3), 1.0));
+  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -6., 0.), 0.7), 1.0));
+
+
+  return unionSDF(trunc, leaf);
+}
+
 
 vec2 map(vec3 samplePoint) { // vec2.y - is ID
     vec2 scene;
@@ -203,11 +213,13 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
 	vec2 tree1 = tree1(samplePoint + vec3(-2.2, 1.2, 3.));
     vec2 tree2 = tree2(samplePoint + vec3(2.2, 1.2, 3.));
     vec2 tree3 = tree3(samplePoint + vec3(-2.2, 1.2, -5.));
+    vec2 tree4 = tree4(samplePoint + vec3(2.2, 1.2, -5.));
 
     scene = unionSDF(tree1, plane);
     scene = unionSDF(scene, tree2);
     scene = unionSDF(scene, tree2);
     scene = unionSDF(scene, tree3);
+    scene = unionSDF(scene, tree4);
 
 
 	scene = unionSDF(scene, plane);
