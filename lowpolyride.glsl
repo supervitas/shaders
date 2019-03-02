@@ -5,6 +5,7 @@
 precision highp float;
 #endif
 
+#define AA 2
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  100. // far
@@ -16,7 +17,7 @@ precision highp float;
 #define BACK_COL_TOP vec3(0.000,0.579,0.825)
 #define BACK_COL_BOTTOM vec3(0.149,0.244,0.785)
 
-uniform sampler2D u_tex0; // https://images-na.ssl-images-amazon.com/images/I/910PPWWqFuL.png
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
@@ -107,7 +108,7 @@ float sdSphere( vec3 p, float s ) {
 
 float sdBox( vec3 p, vec3 b ) {
   vec3 d = abs(p) - b;
-  return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0); // remove this line for an only partially signed sdf
+  return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0); // remove this line for an only partially signed sdf 
 }
 
 float sdCappedCylinder( vec3 p, vec2 h ) {
@@ -155,17 +156,17 @@ float opRepSphere( vec3 p, vec3 c, float radius) {
 
 vec2 opSmoothUnion( vec2 d1, vec2 d2, float k ) {
     float h = clamp( 0.5 + 0.5*(d2.x - d1.x) / k, 0.0, 1.0 );
-    return mix( d2, d1, h ) - k*h*(1.0-h);
+    return mix( d2, d1, h ) - k*h*(1.0-h); 
 }
 
 vec2 opSmoothSubtraction( vec2 d1, vec2 d2, float k ) {
     float h = clamp( 0.5 - 0.5*(d2.x + d1.x) /k, 0.0, 1.0 );
-    return mix( d2, -d1, h ) + k*h*(1.0-h);
+    return mix( d2, -d1, h ) + k*h*(1.0-h); 
 }
 
 vec2 opSmoothIntersection( vec2 d1, vec2 d2, float k ) {
     float h = clamp( 0.5 - 0.5*(d2.x - d1.x) / k, 0.0, 1.0 );
-    return mix( d2, d1, h ) + k * h * (1.0 - h);
+    return mix( d2, d1, h ) + k * h * (1.0 - h); 
 }
 
 
@@ -173,33 +174,33 @@ float differenceSDF(float distA, float distB) {
     return max(distA, -distB);
 }
 
-vec2 tree1(vec3 p) {
+vec2 tree1(vec3 p) {	
   vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0.,-.5,0) , vec2(0.2, 2.)), 2.0);
   vec2 leaf = vec2(sdOctahedron(p + vec3(0., -3, 0.), 2.120), 1.0);
-
+                       
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree2(vec3 p) {
+vec2 tree2(vec3 p) {	
   vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
   vec2 leaf = vec2(sdTriPrism(p + vec3(0, -2, 0.), vec2(1.70, 1.)), 1.0);
 
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree3(vec3 p) {
+vec2 tree3(vec3 p) {	
   vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
   vec2 leaf = vec2(sdHexPrism(p + vec3(0, -2, 0.), vec2(1.70, 1.)), 1.0);
 
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree4(vec3 p) {
+vec2 tree4(vec3 p) {	
   vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
   vec2 leaf = vec2(sdOctahedron(p + vec3(0., -3, 0.), 2.120), 1.0);
   leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -4.7, 0.), 1.3), 1.0));
   leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -6., 0.), 0.7), 1.0));
-
+  
 
   return unionSDF(trunc, leaf);
 }
@@ -220,11 +221,11 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
     scene = unionSDF(scene, tree2);
     scene = unionSDF(scene, tree3);
     scene = unionSDF(scene, tree4);
-
-
+    
+    
 	scene = unionSDF(scene, plane);
 
-
+    
     return scene;
 }
 
@@ -258,14 +259,14 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
     vec3 L = normalize(lightPos - p);
     vec3 V = normalize(eye - p);
     vec3 R = normalize(reflect(-L, N));
-
+    
     float dotLN = dot(L, N);
     float dotRV = dot(R, V);
-
+    
     if (dotLN < 0.0) { // Light not visible from this point on the surface
         return vec3(0.0, 0.0, 0.0);
-    }
-
+    } 
+    
     if (dotRV < 0.0) { // Light reflection in opposite direction as viewer, apply only diffuse component
         return lightIntensity * (k_d * dotLN);
     }
@@ -274,13 +275,13 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
 
 struct light {
     vec3 lightPosition;
-
+    
     vec3 amibnetColor;
     float ambientIntencity;
-
+    
     vec3 directLightColor;
 	vec3 directLightIntencity;
-
+    
     vec3 specularLightColor;
     float specularLightIntencity;
 };
@@ -291,7 +292,7 @@ vec3 phongIllumination(light data, vec3 p, vec3 eye) {
 
     return ambientColor + phongColor;
 }
-
+            
 
 vec3 rayDirection(float fieldOfView, vec2 size, vec2 fragCoord) {
     vec2 xy = fragCoord - size / 2.0;
@@ -337,26 +338,19 @@ float calcAO( vec3 pos, vec3 nor ) {
         occ += -(dd-hr)*sca;
         sca *= 0.95;
     }
-    return clamp( 1.0 - 3.0*occ, 0.0, 1.0 );
+    return clamp( 1.0 - 3.0*occ, 0.0, 1.0 );    
 }
 
-
-void main() {
-    vec2 uv = gl_FragCoord.xy / u_resolution;
-    vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy)/u_resolution.y;
-
-    const float speed = 0.5;
-    // vec3 ro = vec3( 2.5 * cos(speed * u_time + 6.0), 0.5, 2.5 * sin(speed * u_time + 6.0) );
-
-    vec3 ro = vec3(mix(-2., 2., (sin(u_time))), 5., -10.);
-
+vec3 render(vec2 p, vec2 uv) {
+      vec3 ro = vec3(mix(-2., 2., (sin(u_time))), 5., -10.);
+    
     vec3 ta = vec3(0,0, -1.000);
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
-
+    
     vec3 color = vec3(1.0);
     vec2 scene = raymarsh(ro, rd, MIN_DIST, MAX_DIST);
-
+    
     if (scene.x > MAX_DIST - EPSILON) { // background
         color = background(uv);
     } else {
@@ -373,22 +367,42 @@ void main() {
          if (scene.y >= 2. && scene.y <= 3.) {
              color = vec3(0.130,0.037,0.004);
          }
-
+        
     	 if (scene.y >= 3. && scene.y <= 4.) {
              color = vec3(0.545,0.545,0.545);
          }
-
+        
          vec3 p = ro + scene.x * rd;
          vec3 nor = getNormal(p);
          vec3 ref = reflect( rd, nor );
 
-       	 color *= phongIllumination(light1, p, ro);
-	     // color *= softShadow(p, light1.lightPosition, 0.492, 2.5, 32.);
+       	 color *= phongIllumination(light1, p, ro);        
+	     // color *= softShadow(p, light1.lightPosition, 0.180, 0.804, 0.2);
 		 color *= calcAO( p, nor );
 
     }
+    
+	return color;
+}
 
+
+void main() {
+     vec2 uv = gl_FragCoord.xy / u_resolution;
+#if AA>1
+    vec3 color = vec3(0.0);
+    for( int m=0; m<AA; m++ )
+    for( int n=0; n<AA; n++ ) {
+        vec2 px = gl_FragCoord.xy + vec2(float(m),float(n)) / float(AA);
+        vec2 p = (-u_resolution.xy+2.0*px) / u_resolution.y;
+    	color += render( p, uv );    
+    }
+    color /= float(AA*AA);
+#else
+ 	vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy)/u_resolution.y;
+    vec3 color = render(p, uv);
+#endif 
+ 
     color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
 	color = pow(color, vec3(1. / 2.2)); // gamma correction
-    gl_FragColor = vec4(color,1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
