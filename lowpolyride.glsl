@@ -141,6 +141,11 @@ float sdPlane( vec3 p ) {
 	return p.y;
 }
 
+float sdTorus( vec3 p, vec2 t ) {
+  vec2 q = vec2(length(p.xz)-t.x,p.y);
+  return length(q)-t.y;
+}
+
 vec2 intersectSDF(vec2 d1, vec2 d2) {
 	return (d1.x>d2.x) ? d1 : d2;
 }
@@ -181,7 +186,7 @@ vec2 tree1(vec3 p) {
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree2(vec3 p) {	
+vec2 tree2(vec3 p) {
   vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
   vec2 leaf = vec2(sdTriPrism(p + vec3(0, -2, 0.), vec2(1.70, 1.)), 1.0);
 
@@ -189,20 +194,69 @@ vec2 tree2(vec3 p) {
 }
 
 vec2 tree3(vec3 p) {	
-  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
-  vec2 leaf = vec2(sdHexPrism(p + vec3(0, -2, 0.), vec2(1.70, 1.)), 1.0);
+  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,2.990)), 2.0);
+  vec2 leaf = vec2(sdHexPrism(p + vec3(0, -3.5, 0.), vec2(1.70, 1.)), 1.0);
 
   return unionSDF(trunc, leaf);
 }
 
 vec2 tree4(vec3 p) {	
-  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
-  vec2 leaf = vec2(sdOctahedron(p + vec3(0., -3, 0.), 2.120), 1.0);
-  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -4.7, 0.), 1.3), 1.0));
-  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -6., 0.), 0.7), 1.0));
+  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), 2.0);
+  vec2 leaf = vec2(sdOctahedron(p + vec3(0., -4, 0.), 2.120), 1.0);
+  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), 1.0));
+  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -6.8, 0.), 0.7), 1.0));
   
 
   return unionSDF(trunc, leaf);
+}
+
+
+vec2 tree5(vec3 p) {
+	vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), 2.0);
+	vec2 leaf = vec2(sdBox(p + vec3(0., -4, 0.), vec3(1.5)), 1.0);
+	leaf = unionSDF(leaf, vec2(sdBox(p + vec3(1.2, -3.5, 1.5), vec3(0.8)), 5.0));
+    leaf = unionSDF(leaf, vec2(sdBox(p + vec3(-0.9, -5.5, -1.2), vec3(0.9)),4.0));
+    
+
+	return unionSDF(trunc, leaf);
+}
+
+vec2 createTrees(vec3 samplePoint) {
+    vec2 scene;
+
+	vec2 tree1 = tree1(samplePoint + vec3(-2.2, 1.2, 3.));
+    vec2 tree2 = tree2(samplePoint + vec3(2.2, 1.2, 3.));
+    vec2 tree3 = tree3(samplePoint + vec3(-2.2, 1.2, -5.));
+    vec2 tree4 = tree4(samplePoint + vec3(2.2, 1.2, -5.));
+    vec2 tree5 = tree5(samplePoint + vec3(7.2, 1.2, -7.));
+
+    scene = tree1;
+    scene = unionSDF(scene, tree2);
+    scene = unionSDF(scene, tree2);
+    scene = unionSDF(scene, tree3);
+    scene = unionSDF(scene, tree4);
+    scene = unionSDF(scene, tree5);
+    
+    return scene;
+}
+
+
+vec2 createCar(vec3 p) {    
+    vec2 body = vec2(sdBox(p + vec3(0., -0.2, 0), vec3(1, 0.2, 2.)), 10.0);
+
+    vec3 t = rotateZ(PI / 2.) * rotateX(PI / 2.) * p;
+   
+    vec2 wheel = vec2(sdTorus(t + vec3(1.5, 1.2, .1), vec2(0.5,0.2)), 11.0);
+    vec2 wheel2 = vec2(sdTorus(t + vec3(-1.5, 1.2, .1), vec2(0.5,0.2)), 11.0);
+    vec2 wheel3 = vec2(sdTorus(t + vec3(-1.5, -1.2, .1), vec2(0.5,0.2)), 11.0);
+    vec2 wheel4 = vec2(sdTorus(t + vec3(1.5, -1.2, .1), vec2(0.5,0.2)), 11.0);
+    
+    vec2 car = unionSDF(body, wheel);
+    car = unionSDF(car, wheel2);
+    car = unionSDF(car, wheel3);
+    car = unionSDF(car, wheel4);
+    
+    return car;
 }
 
 
@@ -210,21 +264,14 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
     vec2 scene;
 
     vec2 plane = vec2(sdPlane(samplePoint + vec3(0, 3.0, 0.)), 3.);
-    // vec2 tower = tower(samplePoint + vec3(0, 1.2, 3.));
-	vec2 tree1 = tree1(samplePoint + vec3(-2.2, 1.2, 3.));
-    vec2 tree2 = tree2(samplePoint + vec3(2.2, 1.2, 3.));
-    vec2 tree3 = tree3(samplePoint + vec3(-2.2, 1.2, -5.));
-    vec2 tree4 = tree4(samplePoint + vec3(2.2, 1.2, -5.));
-
-    scene = unionSDF(tree1, plane);
-    scene = unionSDF(scene, tree2);
-    scene = unionSDF(scene, tree2);
-    scene = unionSDF(scene, tree3);
-    scene = unionSDF(scene, tree4);
     
+    // vec2 trees = createTrees(samplePoint);
     
+    // scene = unionSDF(trees, plane);
+    
+    vec2 car = createCar(samplePoint);
+    scene = unionSDF(car, plane);
 	scene = unionSDF(scene, plane);
-
     
     return scene;
 }
@@ -342,7 +389,7 @@ float calcAO( vec3 pos, vec3 nor ) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-      vec3 ro = vec3(mix(-2., 2., (sin(u_time))), 5., -10.);
+      vec3 ro = vec3(mix(-1., 3., (sin(u_time))), 8., -10.);
     
     vec3 ta = vec3(0,0, -1.000);
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
@@ -361,7 +408,7 @@ vec3 render(vec2 p, vec2 uv) {
         vec3(0.910,0.861,0.879), 3.260); // specular color  - specular power
 
          if (scene.y >= 1. && scene.y <= 2.) {
-             color = vec3(0.268,0.695,0.318);
+             color = vec3(0.091,0.260,0.082);
          }
 
          if (scene.y >= 2. && scene.y <= 3.) {
@@ -370,6 +417,26 @@ vec3 render(vec2 p, vec2 uv) {
         
     	 if (scene.y >= 3. && scene.y <= 4.) {
              color = vec3(0.545,0.545,0.545);
+         }
+        
+         if (scene.y >= 4. && scene.y <= 5.) {
+             color = vec3(0.359,0.485,0.121);
+         }
+        
+        if (scene.y >= 5. && scene.y <= 6.) {
+             color = vec3(0.273,0.780,0.246);
+         }
+        
+        
+        
+        
+        // car
+         if (scene.y >= 10. && scene.y <= 11.) {
+             color = vec3(0.460,0.447,0.133);
+         }
+        
+        if (scene.y >= 11. && scene.y <= 12.) {
+             color = vec3(0.040,0.039,0.012);
          }
         
          vec3 p = ro + scene.x * rd;
@@ -404,5 +471,6 @@ void main() {
  
     color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
 	color = pow(color, vec3(1. / 2.2)); // gamma correction
+    // color = smoothstep(0., 1., color);
     gl_FragColor = vec4(color, 1.0);
 }
