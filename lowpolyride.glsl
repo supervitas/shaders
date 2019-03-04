@@ -241,17 +241,35 @@ vec2 createTrees(vec3 samplePoint) {
 }
 
 
-vec2 createCar(vec3 p) {    
-    vec2 body = vec2(sdBox(p + vec3(0., -0.2, 0), vec3(1, 0.2, 2.)), 10.0);
+vec2 createCar(vec3 p) {
+    float jumping = mix(-0.2, -0.3, abs(sin(u_time * 4.)));
+    const float height = 0.5;
+
+
+    vec2 body = vec2(sdBox(p + vec3(0., jumping - height, 0), vec3(1.35, height, 2.5)), 10.0);
+    vec2 roof = vec2(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.1, 0.1, 1)), 11.0);
+    vec2 windowBack = vec2(sdBox(rotateX(2.100) * p + vec3(0.,  2.1, 1.2), vec3(1.1, 0.1, 0.65)), 12.0);
+    
+    vec2 car = unionSDF(body, roof);
+    car = unionSDF(car, windowBack);
+    
+    vec2 bagazh = vec2(sdCappedCylinder(rotateZ(1.54 )  * rotateX( PI / 2.) * p + vec3(0., 0, 3.6 + abs(jumping)) , vec2(0.5, 2.)), 2.0);
+     car = unionSDF(car, bagazh);
+    
+    for (float i = 0.; i < 3.; i++) {
+         vec2 holder = vec2(sdCappedCylinder( rotateZ(PI )  * rotateX( PI / 2.) * p + vec3(0.7 - 0.7 * i , 0., 2.85 + abs(jumping)) , vec2(0.1, 0.5)), 14.0);
+         car = unionSDF(car, holder);
+    }
+
 
     vec3 t = rotateZ(PI / 2.) * rotateX(PI / 2.) * p;
    
-    vec2 wheel = vec2(sdTorus(t + vec3(1.5, 1.2, .1), vec2(0.5,0.2)), 11.0);
-    vec2 wheel2 = vec2(sdTorus(t + vec3(-1.5, 1.2, .1), vec2(0.5,0.2)), 11.0);
-    vec2 wheel3 = vec2(sdTorus(t + vec3(-1.5, -1.2, .1), vec2(0.5,0.2)), 11.0);
-    vec2 wheel4 = vec2(sdTorus(t + vec3(1.5, -1.2, .1), vec2(0.5,0.2)), 11.0);
+    vec2 wheel = vec2(sdTorus(t + (vec3(1.5, 1.52, .1) ), vec2(0.5,0.2) ), 21.0);
+    vec2 wheel2 = vec2(sdTorus(t + vec3(-1.5, 1.52, .1), vec2(0.5,0.2)), 21.0);
+    vec2 wheel3 = vec2(sdTorus(t + vec3(-1.5, -1.52, .1), vec2(0.5,0.2)), 21.0);
+    vec2 wheel4 = vec2(sdTorus(t + vec3(1.5, -1.52, .1), vec2(0.5,0.2)), 21.0);
     
-    vec2 car = unionSDF(body, wheel);
+    car = unionSDF(car, wheel);
     car = unionSDF(car, wheel2);
     car = unionSDF(car, wheel3);
     car = unionSDF(car, wheel4);
@@ -320,24 +338,17 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
     return lightIntensity * (k_d * dotLN + k_s * pow(dotRV, alpha));
 }
 
-struct light {
-    vec3 lightPosition;
-    
-    vec3 amibnetColor;
-    float ambientIntencity;
-    
-    vec3 directLightColor;
-	vec3 directLightIntencity;
-    
-    vec3 specularLightColor;
-    float specularLightIntencity;
-};
 
-vec3 phongIllumination(light data, vec3 p, vec3 eye) {
-    vec3 ambientColor = data.ambientIntencity * data.amibnetColor;
-	vec3 phongColor = phongContribForLight(data.directLightColor, data.specularLightColor, data.specularLightIntencity, p, eye, data.lightPosition, data.directLightIntencity);
-
-    return ambientColor + phongColor;
+vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye) {
+    const vec3 ambientLight = .8 * vec3(1.0, 1.0, 1.0);
+    vec3 color = ambientLight * k_a;
+    
+    vec3 light1Pos = vec3(4.0, 12.0,4.0);
+    vec3 light1Intensity = vec3(0.885,0.885,0.885);
+    
+    color += phongContribForLight(k_d, k_s, alpha, p, eye,light1Pos,light1Intensity);
+      
+    return color;
 }
             
 
@@ -389,9 +400,10 @@ float calcAO( vec3 pos, vec3 nor ) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-      vec3 ro = vec3(mix(-1., 3., (sin(u_time))), 8., -10.);
+  vec3 ro = vec3(mix(-1., -3., sin(u_time)), 8., -10.);
+    // vec3 ro = 9.0*normalize(vec3(sin(3.0*m.x), 2.4*m.y, cos(3.0*m.x)));
     
-    vec3 ta = vec3(0,0, -1.000);
+    vec3 ta = vec3(0, 5, -5.000);
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
@@ -401,12 +413,7 @@ vec3 render(vec2 p, vec2 uv) {
     if (scene.x > MAX_DIST - EPSILON) { // background
         color = background(uv);
     } else {
-        light light1 = light(
-        vec3(6.000,14.617,3.794), // light position
-        vec3(0.735,0.745,0.737), 0.620, // ambient color - ambient intencity
-        vec3(0.885,0.831,0.839), vec3(3.), // direct light color - direct light intencity
-        vec3(0.910,0.861,0.879), 3.260); // specular color  - specular power
-
+       
          if (scene.y >= 1. && scene.y <= 2.) {
              color = vec3(0.091,0.260,0.082);
          }
@@ -415,8 +422,8 @@ vec3 render(vec2 p, vec2 uv) {
              color = vec3(0.130,0.037,0.004);
          }
         
-    	 if (scene.y >= 3. && scene.y <= 4.) {
-             color = vec3(0.545,0.545,0.545);
+    	 if (scene.y >= 3. && scene.y <= 4.) { // plane
+             color = vec3(0.155,0.152,0.155);
          }
         
          if (scene.y >= 4. && scene.y <= 5.) {
@@ -432,18 +439,31 @@ vec3 render(vec2 p, vec2 uv) {
         
         // car
          if (scene.y >= 10. && scene.y <= 11.) {
-             color = vec3(0.460,0.447,0.133);
+             color = vec3(255,173,0);
          }
         
-        if (scene.y >= 11. && scene.y <= 12.) {
-             color = vec3(0.040,0.039,0.012);
+         if (scene.y >= 11. && scene.y <= 12.) {
+             color = vec3(0.790,0.357,0.109);
+         }
+        
+        if (scene.y >= 12. && scene.y <= 13.) { // glass
+             color = vec3(0.460,0.480,0.450);
+         }
+        
+        if (scene.y >= 14. && scene.y <= 14.) { // on roof-holder
+             color = vec3(0.302,0.877,0.960);
+         }
+        
+        if (scene.y >= 21. && scene.y <= 22.) {
+             color = vec3(0.005,0.005,0.005);
          }
         
          vec3 p = ro + scene.x * rd;
          vec3 nor = getNormal(p);
-         vec3 ref = reflect( rd, nor );
+     
 
-       	 color *= phongIllumination(light1, p, ro);        
+        float shininess = 10.0;
+    	color *= phongIllumination(vec3(1.5), vec3(0.5), vec3(0.5), shininess, p, ro);
 	     // color *= softShadow(p, light1.lightPosition, 0.180, 0.804, 0.2);
 		 color *= calcAO( p, nor );
 
@@ -465,11 +485,11 @@ void main() {
     }
     color /= float(AA*AA);
 #else
- 	vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy)/u_resolution.y;
+ 	vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy) / u_resolution.y;
     vec3 color = render(p, uv);
 #endif 
  
-    color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
+    // color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
 	color = pow(color, vec3(1. / 2.2)); // gamma correction
     // color = smoothstep(0., 1., color);
     gl_FragColor = vec4(color, 1.0);
