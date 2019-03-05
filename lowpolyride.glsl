@@ -5,7 +5,7 @@
 precision highp float;
 #endif
 
-#define AA 1
+#define AA 2
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  100. // far
@@ -188,9 +188,9 @@ vec2 tree1(vec3 p) {
 
 vec2 tree2(vec3 p) {
     vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
-	vec2 leaf = vec2(sdBox(p + vec3(0., -4, 0.), vec3(1.5)), 1.0);
+	vec2 leaf = vec2(sdBox(p + vec3(0., -4, 0.), vec3(1.2)), 1.0);
     
-	leaf = intersectSDF(leaf, vec2(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -5, 0.), vec3(1.5)), 1.0));
+	leaf = unionSDF(leaf, vec2(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), 1.0));
 
   return unionSDF(trunc, leaf);
 }
@@ -226,11 +226,11 @@ vec2 tree5(vec3 p) {
 vec2 createTrees(vec3 samplePoint) {
     vec2 scene;
 
-	vec2 tree1 = tree1(samplePoint + vec3(-2.2, 1.2, 3.));
-    vec2 tree2 = tree2(samplePoint + vec3(2.2, 1.2, 3.));
-    vec2 tree3 = tree3(samplePoint + vec3(-2.2, 1.2, -5.));
-    vec2 tree4 = tree4(samplePoint + vec3(2.2, 1.2, -5.));
-    vec2 tree5 = tree5(samplePoint + vec3(7.2, 1.2, -7.));
+	vec2 tree1 = tree1(samplePoint + vec3(-22.2, 1.2, -35.));
+    vec2 tree2 = tree2(samplePoint + vec3(-18.4, 1.2, -15.));
+    vec2 tree3 = tree3(samplePoint + vec3(-22.2, 1.2, -25.));
+    vec2 tree4 = tree4(samplePoint + vec3(22.2, 1.2, -25.));
+    vec2 tree5 = tree5(samplePoint + vec3(20.2, 1.2, -15.));
 
     scene = tree1;
  
@@ -299,8 +299,6 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
 
     
     vec2 trees = createTrees(samplePoint);
-    
-    // scene = unionSDF(trees, plane);
     
     vec2 car = createCar(samplePoint);
     scene = unionSDF(car, plane);
