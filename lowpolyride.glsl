@@ -288,6 +288,11 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
 
     vec2 plane = vec2(sdPlane(samplePoint + vec3(0, 3.0, 0.)), 3.);
     
+    if (mod(samplePoint.z + 20. * u_time, 16.) > 6.600 && samplePoint.x < 0. &&  samplePoint.x > -0.7) {
+
+        plane.y = 31.;
+    }
+    
     vec2 trees = createTrees(samplePoint);
     
     // scene = unionSDF(trees, plane);
@@ -297,6 +302,8 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
 	scene = unionSDF(scene, plane);
     
     scene = unionSDF(trees, scene);
+    
+    
     
     return scene;
 }
@@ -432,7 +439,7 @@ vec3 render(vec2 p, vec2 uv) {
          }
         
     	 if (scene.y >= 3. && scene.y <= 4.) { // plane
-             color = vec3(0.155,0.152,0.155);
+             color = vec3(0.020,0.020,0.020);
          }
         
          if (scene.y >= 4. && scene.y <= 5.) {
@@ -466,6 +473,11 @@ vec3 render(vec2 p, vec2 uv) {
         if (scene.y >= 21. && scene.y <= 22.) {
              color = vec3(0.005,0.005,0.005);
          }
+        
+        
+        if (scene.y > 31. && scene.y < 32.) {
+            color = vec3(1.0);
+        }
         
          vec3 p = ro + scene.x * rd;
          vec3 nor = getNormal(p);
