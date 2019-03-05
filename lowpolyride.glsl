@@ -247,14 +247,17 @@ vec2 createCar(vec3 p) {
 
 
     vec2 body = vec2(sdBox(p + vec3(0., jumping - height, 0), vec3(1.35, height, 2.5)), 10.0);
-    vec2 roof = vec2(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.1, 0.1, 1)), 11.0);
+    vec2 roof = vec2(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.35, 0.1, 1)), 11.0);
     vec2 windowBack = vec2(sdBox(rotateX(2.100) * p + vec3(0.,  2.1, 1.2), vec3(1.1, 0.1, 0.65)), 12.0);
     
     vec2 car = unionSDF(body, roof);
     car = unionSDF(car, windowBack);
     
-    vec2 bagazh = vec2(sdCappedCylinder(rotateZ(1.54 )  * rotateX( PI / 2.) * p + vec3(0., 0, 3.6 + abs(jumping)) , vec2(0.5, 2.)), 2.0);
+    vec2 bagazh = vec2(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(1.22, -1.15 , -2.1), vec2(0.13, 0.75)), 2.0);
      car = unionSDF(car, bagazh);
+    
+    vec2 bagazh2 = vec2(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(-1.22, -1.15, -2.1), vec2(0.13, 0.75)), 2.0);
+     car = unionSDF(car, bagazh2);
     
     for (float i = 0.; i < 3.; i++) {
          vec2 holder = vec2(sdCappedCylinder( rotateZ(PI )  * rotateX( PI / 2.) * p + vec3(0.7 - 0.7 * i , 0., 2.85 + abs(jumping)) , vec2(0.1, 0.5)), 14.0);
@@ -400,7 +403,9 @@ float calcAO( vec3 pos, vec3 nor ) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-  vec3 ro = vec3(mix(-1., -3., sin(u_time)), 8., -10.);
+  // vec3 ro = vec3(mix(-2., 2., sin(u_time)), 5., -8.);
+      vec3 ro = vec3(0, 6., -10.);
+    // vec2 m = u_mouse / u_resolution;
     // vec3 ro = 9.0*normalize(vec3(sin(3.0*m.x), 2.4*m.y, cos(3.0*m.x)));
     
     vec3 ta = vec3(0, 5, -5.000);
