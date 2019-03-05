@@ -286,12 +286,17 @@ vec2 createCar(vec3 p) {
 vec2 map(vec3 samplePoint) { // vec2.y - is ID
     vec2 scene;
 
-    vec2 plane = vec2(sdPlane(samplePoint + vec3(0, 3.0, 0.)), 3.);
+    vec2 plane = vec2(sdPlane(samplePoint + vec3(0, 3.0, 0.)), 32.);
     
     if (mod(samplePoint.z + 20. * u_time, 16.) > 6.600 && samplePoint.x < 0. &&  samplePoint.x > -0.7) {
-
         plane.y = 31.;
     }
+    
+    if (samplePoint.x < -15.5 || samplePoint.x > 15.5 ) {
+        plane.y = 33.;
+    }
+    
+
     
     vec2 trees = createTrees(samplePoint);
     
@@ -437,10 +442,7 @@ vec3 render(vec2 p, vec2 uv) {
          if (scene.y >= 2. && scene.y <= 3.) {
              color = vec3(0.130,0.037,0.004);
          }
-        
-    	 if (scene.y >= 3. && scene.y <= 4.) { // plane
-             color = vec3(0.020,0.020,0.020);
-         }
+    
         
          if (scene.y >= 4. && scene.y <= 5.) {
              color = vec3(0.359,0.485,0.121);
@@ -475,9 +477,17 @@ vec3 render(vec2 p, vec2 uv) {
          }
         
         
-        if (scene.y > 31. && scene.y < 32.) {
+        if (scene.y > 31. && scene.y < 32.) { // road markup
             color = vec3(1.0);
         }
+        
+     	if (scene.y >= 32. && scene.y <= 33.) { // plane
+             color = vec3(0.020,0.020,0.020);
+         }
+        
+        if (scene.y >= 33. && scene.y <= 34.) { // green
+             color = vec3(0.339,0.905,0.251);
+         }
         
          vec3 p = ro + scene.x * rd;
          vec3 nor = getNormal(p);
