@@ -513,13 +513,13 @@ void main() {
     	color += render( p, uv );    
     }
     color /= float(AA*AA);
-#else
+#elses
  	vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy) / u_resolution.y;
     vec3 color = render(p, uv);
 #endif 
  
     // color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
-	color = pow(color, vec3(1. / 2.2)); // gamma correction
+	// color = pow(color, vec3(1. / 2.2)); // gamma correction
     // color = smoothstep(0., 1., color);
     gl_FragColor = vec4(color, 1.0);
 }
