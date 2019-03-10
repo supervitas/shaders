@@ -5,12 +5,14 @@
 precision highp float;
 #endif
 
-#define AA 2
+
+
+#define AA 1
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  100. // far
 #define EPSILON 0.0001
-#define PI 3.1415926535ы
+#define PI 3.1415926535
 
 
 
@@ -22,10 +24,12 @@ precision highp float;
 #define CAR_ROOF vec3(0.625,0.282,0.086)
 #define CAR_GLASS vec3(0.460,0.480,0.450)
 #define CAR_TOP_BAG vec3(0.302,0.877,0.960)
-#define CAR_TIRES vec3(0.255,0.255,0.255)
+#define CAR_TIRES vec3(0.060,0.060,0.060)
 
-#define GREEN_GRASS vec3(0.091,0.260,0.082)
-#define ROAD vec3(0.020,0.020,0.020)
+#define GREEN_GRASS vec3(0.137,0.645,0.163)
+#define ROAD vec3(0.150,0.150,0.150)
+
+#define ROAD_WIDTH 12.752
 
 
 // gradient background
@@ -37,49 +41,34 @@ uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
 
-
-
 float random (in vec2 _st) {
     return fract(sin(dot(_st.xy,
                          vec2(12.9898,78.233)))*
         43758.5453123);
 }
 
-// Based on Morgan McGuire @morgan3d
-// https://www.shadertoy.com/view/4dS3Wd
-float noise (in vec2 _st) {
-    vec2 i = floor(_st);
-    vec2 f = fract(_st);
+vec3 noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
 
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
+  vec2 df = 20.0*f*f*(f*(f-2.0)+1.0);
+  f = f*f*f*(f*(f*6.-15.)+10.);
 
-    vec2 u = f * f * (3.0 - 2.0 * f);
+  float a = random(i + vec2(0.5));
+  float b = random(i + vec2(1.5, 0.5));
+  float c = random(i + vec2(.5, 1.5));
+  float d = random(i + vec2(1.5, 1.5));
 
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
+  float k = a - b - c + d;
+  float n = mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+
+  return vec3(n, vec2(b - a + k * f.y, c - a + k * f.x) * df);
 }
 
-#define NUM_OCTAVES 10
 
-float fbm ( in vec2 _st) {
-    float v = 0.0;
-    float a = 0.5;
-    vec2 shift = vec2(140.0);
-    // Rotate to reduce axial bias
-    mat2 rot = mat2(cos(0.5), sin(0.5),
-                    -sin(0.5), cos(0.50));
-    for (int i = 0; i < NUM_OCTAVES; ++i) {
-        v += a * noise(_st);
-        _st = rot * _st * 2.0 + shift;
-        a *= 0.5;
-    }
-    return v;
-}
+mat2 terrainProps = mat2(0.1,-0.1, 0.1,0.1);
+
+
 
 vec3 background(vec2 uv) {
     return mix(BACK_COL_TOP, BACK_COL_BOTTOM, uv.y);
@@ -205,7 +194,7 @@ vec4 tree2(vec3 p) {
     vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), TRUNK);
 	vec4 leaf = vec4(sdBox(p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES);
     
-	leaf = unionSDF(leaf, vec4(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES));
+  leaf = unionSDF(leaf, vec4(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES));
 
   return unionSDF(trunc, leaf);
 }
@@ -239,20 +228,31 @@ vec4 tree5(vec3 p) {
 }
 
 vec4 createTrees(vec3 samplePoint) {
-    vec4 scene;
+    vec4 scene = vec4(1.);
+    
+    
+	const float zMax = -30.;
+    const float zMin = 15.;
+    
+    float z = fract(u_time);
+    
 
-	vec4 tree1 = tree1(samplePoint + vec3(-22.2, 1.2, -35.));
-    vec4 tree2 = tree2(samplePoint + vec3(-18.4, 1.2, -15.));
-    vec4 tree3 = tree3(samplePoint + vec3(-22.2, 1.2, -25.));
-    vec4 tree4 = tree4(samplePoint + vec3(22.2, 1.2, -25.));
-    vec4 tree5 = tree5(samplePoint + vec3(20.2, 1.2, -15.));
+	vec4 tree1 = tree1(samplePoint + vec3(15.2, -2.5,  mix(zMax,  zMin, mod(u_time, 1.5))));
+    vec4 tree2 = tree2(samplePoint + vec3(18.4, -2.2, mix(zMax, zMin, mod(2.5 + u_time, 1.5))));
+    vec4 tree3 = tree3(samplePoint + vec3(22.2, -3.2, mix(zMax, zMin, mod(2.7 + u_time, 1.5))));
+    vec4 tree4 = tree4(samplePoint + vec3(22.2, -2.2, mix(zMax, zMin, mod(0.2 + u_time, 1.5))));
+    vec4 tree5 = tree5(samplePoint + vec3(20.2, -2, mix(zMax, zMin, mod(0.8 + u_time, 1.5))));
 
     scene = tree1;
+
+
  
     scene = unionSDF(scene, tree2);
     scene = unionSDF(scene, tree3);
     scene = unionSDF(scene, tree4);
     scene = unionSDF(scene, tree5);
+    
+    
     
     return scene;
 }
@@ -298,31 +298,37 @@ vec4 createCar(vec3 p) {
 }
 
 
-vec4 map(vec3 samplePoint) { // vec2.y - is ID
+vec4 map(vec3 samplePoint) {
     vec4 scene;
 
-
-    vec4 plane = vec4(sdPlane(samplePoint + vec3(0, 3.0, 0.)), ROAD);
     
-    if (mod(samplePoint.z + 20. * u_time, 16.) > 6.600 && samplePoint.x < 0. &&  samplePoint.x > -0.7) {
+    vec4 plane = vec4(sdPlane(samplePoint), ROAD);
+    if (mod(samplePoint.z + 16. * u_time, 16.) > 6.600 && samplePoint.x < 0. && samplePoint.x > -0.7) {
         plane.yzw = vec3(1.0);
     }
     
-    if (samplePoint.x < -15.5 || samplePoint.x > 15.5 ) {
+    vec4 trees = vec4(1.0);
+    
+    if (samplePoint.x < -ROAD_WIDTH || samplePoint.x > ROAD_WIDTH ) {
+        trees = createTrees(samplePoint);
+        
+//         vec2 p = 1.5 * samplePoint.xz;
+//         p.y += 1.1 * u_time;
+//         vec3 noise = noise(p);
+//         plane.yzw = vec3(noise.x);
+        
+//          plane.yzw = mix(GREEN_GRASS, vec3(0.392,0.700,0.084), noise.x);
+        
         plane.yzw = GREEN_GRASS;
     }
-    
 
-    
-    vec4 trees = createTrees(samplePoint);
-    
-    vec4 car = createCar(samplePoint);
+
+    vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
+
     scene = unionSDF(car, plane);
 	scene = unionSDF(scene, plane);
     
     scene = unionSDF(trees, scene);
-    
-    
     
     return scene;
 }
@@ -411,7 +417,7 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 float calcAO( vec3 pos, vec3 nor ) {
 	float occ = 0.0;
     float sca = 1.0;
-    for( int i=0; i < 5; i++ ) {
+    for(int i=0; i < 5; i++ ) {
         float hr = 0.01 + 0.12*float(i)/4.0;
         vec3 aopos =  nor * hr + pos;
         float dd = map( aopos ).x;
@@ -423,11 +429,12 @@ float calcAO( vec3 pos, vec3 nor ) {
 
 vec3 render(vec2 p, vec2 uv) {
   // vec3 ro = vec3(mix(-2., 2., sin(u_time)), 5., -8.);
-      vec3 ro = vec3(0, 8., -10.);
+      vec3 ro = vec3(5., 25., -10.6);
+     // ro.z += 20. * u_time;
     // vec2 m = u_mouse / u_resolution;
     // vec3 ro = 9.0*normalize(vec3(sin(3.0*m.x), 2.4*m.y, cos(3.0*m.x)));
     
-    vec3 ta = vec3(0, 5, -1.000);
+    vec3 ta =  normalize(vec3(0., -0.1, -1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
@@ -443,9 +450,9 @@ vec3 render(vec2 p, vec2 uv) {
          vec3 nor = getNormal(p);
      
 
-        float shininess = 10.0;
-    	color *= phongIllumination(vec3(1.5), vec3(0.5), vec3(0.5), shininess, p, ro);
-		 color *= calcAO( p, nor );
+        float shininess = 1.0;
+    	color *= phongIllumination(vec3(2.5), vec3(1.5), vec3(0.5), shininess, p, ro);
+		color *= calcAO( p, nor );
 
     }
     
