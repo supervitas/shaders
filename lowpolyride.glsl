@@ -10,7 +10,22 @@ precision highp float;
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  100. // far
 #define EPSILON 0.0001
-#define PI 3.1415926535
+#define PI 3.1415926535ы
+
+
+
+#define TREE_LEAVES vec3(0.091,0.260,0.082)
+#define TREE_LEAVES_YELLOW vec3(0.359,0.485,0.121)
+#define TRUNK vec3(0.175,0.050,0.005)
+
+#define CAR_BODY vec3(255,173,0)
+#define CAR_ROOF vec3(0.625,0.282,0.086)
+#define CAR_GLASS vec3(0.460,0.480,0.450)
+#define CAR_TOP_BAG vec3(0.302,0.877,0.960)
+#define CAR_TIRES vec3(0.255,0.255,0.255)
+
+#define GREEN_GRASS vec3(0.091,0.260,0.082)
+#define ROAD vec3(0.020,0.020,0.020)
 
 
 // gradient background
@@ -146,11 +161,11 @@ float sdTorus( vec3 p, vec2 t ) {
   return length(q)-t.y;
 }
 
-vec2 intersectSDF(vec2 d1, vec2 d2) {
+vec4 intersectSDF(vec4 d1, vec4 d2) {
 	return (d1.x>d2.x) ? d1 : d2;
 }
 
-vec2 unionSDF(vec2 d1, vec2 d2) {
+vec4 unionSDF(vec4 d1, vec4 d2) {
     return (d1.x<d2.x) ? d1 : d2;
 }
 
@@ -179,58 +194,58 @@ float differenceSDF(float distA, float distB) {
     return max(distA, -distB);
 }
 
-vec2 tree1(vec3 p) {	
-  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0.,-.5,0) , vec2(0.2, 2.)), 2.0);
-  vec2 leaf = vec2(sdOctahedron(p + vec3(0., -3, 0.), 2.120), 1.0);
+vec4 tree1(vec3 p) {	
+  vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0.,-.5,0) , vec2(0.2, 2.)), TRUNK);
+  vec4 leaf = vec4(sdOctahedron(p + vec3(0., -3, 0.), 2.120), TREE_LEAVES);
                        
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree2(vec3 p) {
-    vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), 2.0);
-	vec2 leaf = vec2(sdBox(p + vec3(0., -4, 0.), vec3(1.2)), 1.0);
+vec4 tree2(vec3 p) {
+    vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), TRUNK);
+	vec4 leaf = vec4(sdBox(p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES);
     
-	leaf = unionSDF(leaf, vec2(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), 1.0));
+	leaf = unionSDF(leaf, vec4(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES));
 
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree3(vec3 p) {	
-  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,2.990)), 2.0);
-  vec2 leaf = vec2(sdHexPrism(p + vec3(0, -3.5, 0.), vec2(1.70, 1.)), 1.0);
+vec4 tree3(vec3 p) {	
+  vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,2.990)), TRUNK);
+  vec4 leaf = vec4(sdHexPrism(p + vec3(0, -3.5, 0.), vec2(1.70, 1.)), TREE_LEAVES);
 
   return unionSDF(trunc, leaf);
 }
 
-vec2 tree4(vec3 p) {	
-  vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), 2.0);
-  vec2 leaf = vec2(sdOctahedron(p + vec3(0., -4, 0.), 2.120), 1.0);
-  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), 1.0));
-  leaf = unionSDF(leaf, vec2(sdOctahedron(p + vec3(0., -6.8, 0.), 0.7), 1.0));
+vec4 tree4(vec3 p) {	
+  vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), TRUNK);
+  vec4 leaf = vec4(sdOctahedron(p + vec3(0., -4, 0.), 2.120), TREE_LEAVES);
+  leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), TREE_LEAVES));
+  leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -6.8, 0.), 0.7), TREE_LEAVES));
   
 
   return unionSDF(trunc, leaf);
 }
 
 
-vec2 tree5(vec3 p) {
-	vec2 trunc = vec2(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), 2.0);
-	vec2 leaf = vec2(sdBox(p + vec3(0., -4, 0.), vec3(1.5)), 1.0);
-	leaf = unionSDF(leaf, vec2(sdBox(p + vec3(1.2, -3.5, 1.5), vec3(0.8)), 5.0));
-    leaf = unionSDF(leaf, vec2(sdBox(p + vec3(-0.9, -5.5, -1.2), vec3(0.9)),4.0));
+vec4 tree5(vec3 p) {
+	vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), TRUNK);
+	vec4 leaf = vec4(sdBox(p + vec3(0., -4, 0.), vec3(1.5)), TREE_LEAVES);
+	leaf = unionSDF(leaf, vec4(sdBox(p + vec3(1.2, -3.5, 1.5), vec3(0.8)), TREE_LEAVES_YELLOW));
+    leaf = unionSDF(leaf, vec4(sdBox(p + vec3(-0.9, -5.5, -1.2), vec3(0.9)), TREE_LEAVES_YELLOW));
     
 
 	return unionSDF(trunc, leaf);
 }
 
-vec2 createTrees(vec3 samplePoint) {
-    vec2 scene;
+vec4 createTrees(vec3 samplePoint) {
+    vec4 scene;
 
-	vec2 tree1 = tree1(samplePoint + vec3(-22.2, 1.2, -35.));
-    vec2 tree2 = tree2(samplePoint + vec3(-18.4, 1.2, -15.));
-    vec2 tree3 = tree3(samplePoint + vec3(-22.2, 1.2, -25.));
-    vec2 tree4 = tree4(samplePoint + vec3(22.2, 1.2, -25.));
-    vec2 tree5 = tree5(samplePoint + vec3(20.2, 1.2, -15.));
+	vec4 tree1 = tree1(samplePoint + vec3(-22.2, 1.2, -35.));
+    vec4 tree2 = tree2(samplePoint + vec3(-18.4, 1.2, -15.));
+    vec4 tree3 = tree3(samplePoint + vec3(-22.2, 1.2, -25.));
+    vec4 tree4 = tree4(samplePoint + vec3(22.2, 1.2, -25.));
+    vec4 tree5 = tree5(samplePoint + vec3(20.2, 1.2, -15.));
 
     scene = tree1;
  
@@ -243,36 +258,36 @@ vec2 createTrees(vec3 samplePoint) {
 }
 
 
-vec2 createCar(vec3 p) {
+vec4 createCar(vec3 p) {
     float jumping = mix(-0.2, -0.3, abs(sin(u_time * 4.)));
     const float height = 0.5;
 
 
-    vec2 body = vec2(sdBox(p + vec3(0., jumping - height, 0), vec3(1.35, height, 2.5)), 10.0);
-    vec2 roof = vec2(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.35, 0.1, 1)), 11.0);
-    vec2 windowBack = vec2(sdBox(rotateX(2.100) * p + vec3(0.,  2.1, 1.2), vec3(1.1, 0.1, 0.65)), 12.0);
+    vec4 body = vec4(sdBox(p + vec3(0., jumping - height, 0), vec3(1.35, height, 2.5)), CAR_BODY);
+    vec4 roof = vec4(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.35, 0.1, 1)), CAR_ROOF);
+    vec4 windowBack = vec4(sdBox(rotateX(2.100) * p + vec3(0.,  2.1, 1.2), vec3(1.1, 0.1, 0.65)), CAR_GLASS);
     
-    vec2 car = unionSDF(body, roof);
+    vec4 car = unionSDF(body, roof);
     car = unionSDF(car, windowBack);
     
-    vec2 bagazh = vec2(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(1.22, -1.15 , -2.1), vec2(0.13, 0.75)), 2.0);
+    vec4 bagazh = vec4(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(1.22, -1.15 , -2.1), vec2(0.13, 0.75)), TRUNK);
      car = unionSDF(car, bagazh);
     
-    vec2 bagazh2 = vec2(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(-1.22, -1.15, -2.1), vec2(0.13, 0.75)), 2.0);
+    vec4 bagazh2 = vec4(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(-1.22, -1.15, -2.1), vec2(0.13, 0.75)), TRUNK);
      car = unionSDF(car, bagazh2);
     
-    for (float i = 0.; i < 3.; i++) {
-         vec2 holder = vec2(sdCappedCylinder( rotateZ(PI )  * rotateX( PI / 2.) * p + vec3(0.7 - 0.7 * i , 0., 2.85 + abs(jumping)) , vec2(0.1, 0.5)), 14.0);
-         car = unionSDF(car, holder);
-    }
+    // for (float i = 0.; i < 3.; i++) {
+    //      vec2 holder = vec2(sdCappedCylinder( rotateZ(PI )  * rotateX( PI / 2.) * p + vec3(0.7 - 0.7 * i , 0., 2.85 + abs(jumping)) , vec2(0.1, 0.5)), 14.0);
+    //      car = unionSDF(car, holder);
+    // }
 
 
     vec3 t = rotateZ(PI / 2.) * rotateX(PI / 2.) * p;
    
-    vec2 wheel = vec2(sdTorus(t + (vec3(1.5, 1.52, .1) ), vec2(0.5,0.2) ), 21.0);
-    vec2 wheel2 = vec2(sdTorus(t + vec3(-1.5, 1.52, .1), vec2(0.5,0.2)), 21.0);
-    vec2 wheel3 = vec2(sdTorus(t + vec3(-1.5, -1.52, .1), vec2(0.5,0.2)), 21.0);
-    vec2 wheel4 = vec2(sdTorus(t + vec3(1.5, -1.52, .1), vec2(0.5,0.2)), 21.0);
+    vec4 wheel = vec4(sdTorus(t + (vec3(1.5, 1.52, .1) ), vec2(0.5,0.2) ), CAR_TIRES);
+    vec4 wheel2 = vec4(sdTorus(t + vec3(-1.5, 1.52, .1), vec2(0.5,0.2)), CAR_TIRES);
+    vec4 wheel3 = vec4(sdTorus(t + vec3(-1.5, -1.52, .1), vec2(0.5,0.2)), CAR_TIRES);
+    vec4 wheel4 = vec4(sdTorus(t + vec3(1.5, -1.52, .1), vec2(0.5,0.2)), CAR_TIRES);
     
     car = unionSDF(car, wheel);
     car = unionSDF(car, wheel2);
@@ -283,24 +298,25 @@ vec2 createCar(vec3 p) {
 }
 
 
-vec2 map(vec3 samplePoint) { // vec2.y - is ID
-    vec2 scene;
+vec4 map(vec3 samplePoint) { // vec2.y - is ID
+    vec4 scene;
 
-    vec2 plane = vec2(sdPlane(samplePoint + vec3(0, 3.0, 0.)), 32.);
+
+    vec4 plane = vec4(sdPlane(samplePoint + vec3(0, 3.0, 0.)), ROAD);
     
     if (mod(samplePoint.z + 20. * u_time, 16.) > 6.600 && samplePoint.x < 0. &&  samplePoint.x > -0.7) {
-        plane.y = 31.;
+        plane.yzw = vec3(1.0);
     }
     
     if (samplePoint.x < -15.5 || samplePoint.x > 15.5 ) {
-        plane.y = 33.;
+        plane.yzw = GREEN_GRASS;
     }
     
 
     
-    vec2 trees = createTrees(samplePoint);
+    vec4 trees = createTrees(samplePoint);
     
-    vec2 car = createCar(samplePoint);
+    vec4 car = createCar(samplePoint);
     scene = unionSDF(car, plane);
 	scene = unionSDF(scene, plane);
     
@@ -311,20 +327,20 @@ vec2 map(vec3 samplePoint) { // vec2.y - is ID
     return scene;
 }
 
-vec2 raymarsh(vec3 eye, vec3 marchingDirection, float start, float end) {
+vec4 raymarsh(vec3 eye, vec3 marchingDirection, float start, float end) {
     float depth = start;
     for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
-        vec2 dist = map(eye + depth * marchingDirection);
+        vec4 dist = map(eye + depth * marchingDirection);
         if (dist.x < EPSILON) {
-			return vec2(depth, dist.y);
+			return vec4(depth, dist.yzw);
         }
         depth += dist.x;
         if (depth >= end) {
-            return vec2(end);
+            return vec4(end);
         }
     }
 
-    return vec2(end);
+    return vec4(end);
 }
 
 vec3 getNormal(vec3 p) {
@@ -391,17 +407,6 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
   return mat3(uu, vv, ww);
 }
 
-float softShadow(vec3 ro, vec3 rd, float tmin, float tmax, float k) {
-    float res = 1.0;
-    float t = tmin;
-    for( int i = 0; i < 150; i++ ) {
-		float h = map( ro + rd*t ).x;
-        res = min( res, 8.0 * h / t );
-        t += clamp( h, 0.02, 0.10 );
-        if( res<0.005 || t > tmax ) break;
-    }
-    return clamp( res, 0.0, 1.0 );
-}
 
 float calcAO( vec3 pos, vec3 nor ) {
 	float occ = 0.0;
@@ -427,65 +432,12 @@ vec3 render(vec2 p, vec2 uv) {
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
     vec3 color = vec3(1.0);
-    vec2 scene = raymarsh(ro, rd, MIN_DIST, MAX_DIST);
+    vec4 scene = raymarsh(ro, rd, MIN_DIST, MAX_DIST);
     
     if (scene.x > MAX_DIST - EPSILON) { // background
         color = background(uv);
     } else {
-       
-         if (scene.y >= 1. && scene.y <= 2.) {
-             color = vec3(0.091,0.260,0.082);
-         }
-
-         if (scene.y >= 2. && scene.y <= 3.) {
-             color = vec3(0.130,0.037,0.004);
-         }
-    
-        
-         if (scene.y >= 4. && scene.y <= 5.) {
-             color = vec3(0.359,0.485,0.121);
-         }
-        
-        if (scene.y >= 5. && scene.y <= 6.) {
-             color = vec3(0.273,0.780,0.246);
-         }
-        
-        
-        
-        
-        // car
-         if (scene.y >= 10. && scene.y <= 11.) {
-             color = vec3(255,173,0);
-         }
-        
-         if (scene.y >= 11. && scene.y <= 12.) {
-             color = vec3(0.790,0.357,0.109);
-         }
-        
-        if (scene.y >= 12. && scene.y <= 13.) { // glass
-             color = vec3(0.460,0.480,0.450);
-         }
-        
-        if (scene.y >= 14. && scene.y <= 14.) { // on roof-holder
-             color = vec3(0.302,0.877,0.960);
-         }
-        
-        if (scene.y >= 21. && scene.y <= 22.) {
-             color = vec3(0.005,0.005,0.005);
-         }
-        
-        
-        if (scene.y > 31. && scene.y < 32.) { // road markup
-            color = vec3(1.0);
-        }
-        
-     	if (scene.y >= 32. && scene.y <= 33.) { // plane
-             color = vec3(0.020,0.020,0.020);
-         }
-        
-        if (scene.y >= 33. && scene.y <= 34.) { // green
-             color = vec3(0.339,0.905,0.251);
-         }
+       color = scene.yzw;
         
          vec3 p = ro + scene.x * rd;
          vec3 nor = getNormal(p);
@@ -493,7 +445,6 @@ vec3 render(vec2 p, vec2 uv) {
 
         float shininess = 10.0;
     	color *= phongIllumination(vec3(1.5), vec3(0.5), vec3(0.5), shininess, p, ro);
-	     // color *= softShadow(p, light1.lightPosition, 0.180, 0.804, 0.2);
 		 color *= calcAO( p, nor );
 
     }
@@ -513,7 +464,7 @@ void main() {
     	color += render( p, uv );    
     }
     color /= float(AA*AA);
-#elses
+#else
  	vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy) / u_resolution.y;
     vec3 color = render(p, uv);
 #endif 
