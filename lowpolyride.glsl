@@ -16,17 +16,17 @@ precision highp float;
 
 
 
-#define TREE_LEAVES vec3(0.091,0.260,0.082)
+#define TREE_LEAVES vec3(0.154,0.970,0.153)
 #define TREE_LEAVES_YELLOW vec3(0.359,0.485,0.121)
 #define TRUNK vec3(0.175,0.050,0.005)
 
 #define CAR_BODY vec3(255,173,0)
 #define CAR_ROOF vec3(0.625,0.282,0.086)
-#define CAR_GLASS vec3(0.460,0.480,0.450)
+#define CAR_GLASS vec3(0.388,0.405,0.380)
 #define CAR_TOP_BAG vec3(0.302,0.877,0.960)
 #define CAR_TIRES vec3(0.060,0.060,0.060)
 
-#define GREEN_GRASS vec3(0.137,0.645,0.163)
+#define GREEN_GRASS vec3(0.133,0.175,0.154)
 #define ROAD vec3(0.150,0.150,0.150)
 
 #define ROAD_WIDTH 12.752
@@ -44,6 +44,8 @@ precision highp float;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
+
+
 
 float random (in vec2 _st) {
     return fract(sin(dot(_st.xy,
@@ -183,30 +185,21 @@ float differenceSDF(float distA, float distB) {
     return max(distA, -distB);
 }
 
-vec4 tree1(vec3 p, float scale) {
-  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0.,-.5,0)) / scale) * scale, vec2(0.2, 2.) * scale) , TRUNK);
-  vec4 leaf = vec4(sdOctahedron(((rotateY(PI * scale) * p + vec3(0., -3. * scale, 0.)) / scale) , 2.120) * scale, TREE_LEAVES);
+vec4 tree1(vec3 p, float randValue) {
+  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0.,-.5,0)) / randValue) * randValue, vec2(0.2, 2.) * randValue) , TRUNK);
+  vec4 leaf = vec4(sdOctahedron(((rotateY(PI * randValue) * p + vec3(0., -3. * randValue, 0.)) / randValue) , 2.120) * randValue, TREE_LEAVES);
                        
   return unionSDF(trunc, leaf);
 }
 
-vec4 tree2(vec3 p, float scale) {
-    vec4 trunc = vec4(sdCappedCylinder((rotateX(PI) * p + vec3(0., -.5, 0) / scale ) * scale, vec2(0.2,1.990) * scale), TRUNK);
-	vec4 leaf = vec4(sdBox(((p + vec3(0., -4, 0.)) * scale) / scale, vec3(1.2) * scale), TREE_LEAVES);
-    
-  leaf = unionSDF(leaf, vec4(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES));
+vec4 tree2(vec3 p, float randValue) {
+  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -.5, 0)) / randValue) * randValue, vec2(0.2,2.990) * randValue), TRUNK);
+  vec4 leaf = vec4(sdHexPrism(((rotateY(PI / randValue) * p + vec3(0, -3.5 * randValue, 0.)) / randValue) * randValue, vec2(1.75* randValue, 1.2 * randValue / 1.5) ), vec3(0.113,0.500,0.373));
 
   return unionSDF(trunc, leaf);
 }
 
 vec4 tree3(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -.5, 0)) / randValue) * randValue, vec2(0.2,2.990) * randValue), TRUNK);
-  vec4 leaf = vec4(sdHexPrism(((rotateY(PI / randValue) * p + vec3(0, -3.5, 0.)) / randValue) * randValue, vec2(1.50, 1.5) * randValue), TREE_LEAVES);
-
-  return unionSDF(trunc, leaf);
-}
-
-vec4 tree4(vec3 p, float randValue) {
   vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0) / randValue) * randValue) , vec2(0.2,4.0) * randValue), TRUNK);
   vec4 leaf = vec4(sdOctahedron(p + vec3(0., -3, 0.), 2.120), TREE_LEAVES);
   leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), TREE_LEAVES));
@@ -217,7 +210,7 @@ vec4 tree4(vec3 p, float randValue) {
 }
 
 
-vec4 tree5(vec3 p, float randValue) {
+vec4 tree4(vec3 p, float randValue) {
 	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0)) / randValue) * randValue , vec2(0.2,4.0) * randValue), TRUNK);
 	vec4 leaf = vec4(sdBox((( p + vec3(0., -4, 0.)) / randValue) * randValue, vec3(1.5) * randValue), TREE_LEAVES);
 	leaf = unionSDF(leaf, vec4(sdBox((( p + vec3(1.2, -3.5,2.5)) / randValue) * randValue, vec3(0.8, 0.5, 0.6) * randValue), TREE_LEAVES_YELLOW));
@@ -234,25 +227,25 @@ vec4 createTrees(vec3 samplePoint) {
 	const float zMax = -33.;
     const float zMin = 15.;
     
-    
 
     for (float i = 1.; i < 2.; i++) {
         float rand = random(vec2(i, i));
-        float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
+        float randVal = rand + 1.5 + i + u_time;
+        float rand2 = random(vec2(ceil(randVal), i));
         
-       	vec4 tree = tree5(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + 12. , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.))), rand2 * 0.8 + 1.); 
+       	vec4 tree = tree2(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT, -2.5,  mix(zMax,  zMin, mod(randVal, 1.))), max(min(1.5, rand2 * 4.), 1.0)); 
 
         
         scene = unionSDF(scene, tree);
     }
     
-    for (float i = 3.; i < 6.; i++) {
+    for (float i = 13.; i < 15.; i++) {
         float rand = random(vec2(i, i));
         float randVal = rand + 1.5 + i + u_time;
         float rand2 = random(vec2(ceil(randVal)));
     
         
-       	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT  + 5. , -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), 0.8 + rand); 
+       	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rand2 + 6., -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), max(min(1.5, rand2 * 4.), 1.0)); 
 
         
         scene = unionSDF(scene, tree);
@@ -345,15 +338,9 @@ vec4 map(vec3 samplePoint) {
     vec4 trees = createTrees(samplePoint);
 
     if (samplePoint.x < -ROAD_WIDTH || samplePoint.x > ROAD_WIDTH ) {
-            
-//         vec2 p = .5 * samplePoint.xz;
-//         p.y += 1.5 * u_time;
-//         vec3 noise = noise(p);
-//         plane.yzw = vec3(noise.x);
-        
-//          plane.yzw =vec3(noise.x);
-        
+        // vec4 grass = texture2D(grass, gl_FragCoord.xy / u_resolution);
         plane.yzw = GREEN_GRASS;
+        // plane.yzw = grass.rgb;
     }
 
 
@@ -426,12 +413,12 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
 }
 
 
-vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye) {
+vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec3 lp) {
     const vec3 ambientLight = .8 * vec3(1.0, 1.0, 1.0);
     vec3 color = ambientLight * k_a;
     
-    vec3 light1Pos = vec3(4.0, 12.0,4.0);
-    vec3 light1Intensity = vec3(0.885,0.885,0.885);
+    vec3 light1Pos = lp;
+    vec3 light1Intensity = vec3(1.0);
     
     color += phongContribForLight(k_d, k_s, alpha, p, eye,light1Pos,light1Intensity);
       
@@ -498,8 +485,9 @@ vec3 render(vec2 p, vec2 uv) {
          vec3 nor = getNormal(p);
      
 
-        float shininess = 1.0;
-    	color *= phongIllumination(vec3(2.5), vec3(1.5), vec3(0.5), shininess, p, ro);
+        float shininess = 5.824;
+
+        color *= phongIllumination(vec3(1.5), vec3(1.5), vec3(1.1), shininess, p , ro, vec3(0.0, 205.0, 0.0));
         // color *= calcSoftshadow(p, ro);
 		// color *= calcAO( p, nor );
 
