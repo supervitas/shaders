@@ -37,6 +37,9 @@ precision highp float;
 #define BACK_COL_BOTTOM vec3(0.149,0.244,0.785)
 
 
+#define GEN_TREE(a, b, fun) for (float it = a; it < b; it++) {  float rand = random(vec2(it, it));float rand2 = random(vec2(ceil(rand + 1.5 + it + u_time), it));vec4 tree = tree3(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + it + u_time , 1.))));scene = unionSDF(scene, tree);  }
+
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
@@ -45,6 +48,9 @@ float random (in vec2 _st) {
     return fract(sin(dot(_st.xy,
                          vec2(12.9898,78.233)))*
         43758.5453123);
+}
+float test (float x, float z) {
+    return x + z;
 }
 
 vec3 noise(vec2 p) {
@@ -66,7 +72,6 @@ vec3 noise(vec2 p) {
 }
 
 
-mat2 terrainProps = mat2(0.1,-0.1, 0.1,0.1);
 
 
 
@@ -183,30 +188,30 @@ float differenceSDF(float distA, float distB) {
     return max(distA, -distB);
 }
 
-vec4 tree1(vec3 p) {	
-  vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0.,-.5,0) , vec2(0.2, 2.)), TRUNK);
-  vec4 leaf = vec4(sdOctahedron(p + vec3(0., -3, 0.), 2.120), TREE_LEAVES);
+vec4 tree1(vec3 p, float scale) {
+  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0.,-.5,0)) / scale) * scale, vec2(0.2, 2.) * scale) , TRUNK);
+  vec4 leaf = vec4(sdOctahedron(((p + vec3(0., -3. * scale, 0.)) / scale) , 2.120) * scale, TREE_LEAVES);
                        
   return unionSDF(trunc, leaf);
 }
 
-vec4 tree2(vec3 p) {
-    vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,1.990)), TRUNK);
-	vec4 leaf = vec4(sdBox(p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES);
+vec4 tree2(vec3 p, float scale) {
+    vec4 trunc = vec4(sdCappedCylinder((rotateX(PI) * p + vec3(0., -.5, 0) / scale ) * scale, vec2(0.2,1.990) * scale), TRUNK);
+	vec4 leaf = vec4(sdBox(((p + vec3(0., -4, 0.)) * scale) / scale, vec3(1.2) * scale), TREE_LEAVES);
     
   leaf = unionSDF(leaf, vec4(sdBox(rotateX(1.904 * PI) * rotateZ(.04 * PI) * p + vec3(0., -4, 0.), vec3(1.2)), TREE_LEAVES));
 
   return unionSDF(trunc, leaf);
 }
 
-vec4 tree3(vec3 p) {	
-  vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -.5, 0) , vec2(0.2,2.990)), TRUNK);
-  vec4 leaf = vec4(sdHexPrism(p + vec3(0, -3.5, 0.), vec2(1.70, 1.)), TREE_LEAVES);
+vec4 tree3(vec3 p, float randValue) {
+  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -.5, 0)) / randValue) * randValue, vec2(0.2,2.990) * randValue), TRUNK);
+  vec4 leaf = vec4(sdHexPrism(((rotateY(PI / randValue) * p + vec3(0, -3.5, 0.)) / randValue) * randValue, vec2(1.50, 1.5) * randValue), TREE_LEAVES);
 
   return unionSDF(trunc, leaf);
 }
 
-vec4 tree4(vec3 p) {	
+vec4 tree4(vec3 p) {
   vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), TRUNK);
   vec4 leaf = vec4(sdOctahedron(p + vec3(0., -4, 0.), 2.120), TREE_LEAVES);
   leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), TREE_LEAVES));
@@ -227,31 +232,69 @@ vec4 tree5(vec3 p) {
 	return unionSDF(trunc, leaf);
 }
 
+
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
     
-	const float zMax = -30.;
+	const float zMax = -33.;
     const float zMin = 15.;
     
-    float z = fract(u_time);
     
 
-	vec4 tree1 = tree1(samplePoint + vec3(15.2, -2.5,  mix(zMax,  zMin, mod(u_time, 1.5))));
-    vec4 tree2 = tree2(samplePoint + vec3(18.4, -2.2, mix(zMax, zMin, mod(2.5 + u_time, 1.5))));
-    vec4 tree3 = tree3(samplePoint + vec3(22.2, -3.2, mix(zMax, zMin, mod(2.7 + u_time, 1.5))));
-    vec4 tree4 = tree4(samplePoint + vec3(22.2, -2.2, mix(zMax, zMin, mod(0.2 + u_time, 1.5))));
-    vec4 tree5 = tree5(samplePoint + vec3(20.2, -2, mix(zMax, zMin, mod(0.8 + u_time, 1.5))));
-
-    scene = tree1;
-
-
- 
-    scene = unionSDF(scene, tree2);
-    scene = unionSDF(scene, tree3);
-    scene = unionSDF(scene, tree4);
-    scene = unionSDF(scene, tree5);
+	// vec4 tree1 = tree1(samplePoint + vec3(15.2, -2.5,  mix(zMax,  zMin, mod(u_time, 1.5))));
+	// vec4 tree2 = tree2(samplePoint + vec3(18.4, -2.2, mix(zMax, zMin, mod(2.5 + u_time, 1.5))));
+	// vec4 tree3 = tree3(samplePoint + vec3(22.2, -3.2, mix(zMax, zMin, mod(2.7 + u_time, 1.5))));
+	// vec4 tree4 = tree4(samplePoint + vec3(22.2, -2.2, mix(zMax, zMin, mod(0.2 + u_time, 1.5))));
+	// vec4 tree5 = tree5(samplePoint + vec3(20.2, -2, mix(zMax, zMin, mod(0.8 + u_time, 1.5))));
     
+    const float rightRoadOffset = ROAD_WIDTH + 2.;
+    
+    
+
+
+    for (float i = 0.; i < 3.; i++) {
+        float rand = random(vec2(i, i));
+        float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
+        
+       	vec4 tree = tree3(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.))), rand2 * 0.8 + 1.); 
+
+        
+        scene = unionSDF(scene, tree);
+    }
+    
+//    for (float i = 10.; i < 12.; i++) {
+//         float rand = random(vec2(i, i));
+//         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
+        
+//        	vec4 tree = tree2(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.)))); 
+
+        
+//         scene = unionSDF(scene, tree);
+//     }
+    
+
+//      for (float i = 20.; i < 22.; i++) {
+//         float rand = random(vec2(i, i));
+//         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
+        
+//        	vec4 tree = tree3(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.)))); 
+
+        
+//         scene = unionSDF(scene, tree);
+//     }
+    
+//    for (float i = 15.; i < 18.; i++) {
+//         float rand = random(vec2(i, i));
+//         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
+        
+//        	vec4 tree = tree4(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.)))); 
+
+        
+//         scene = unionSDF(scene, tree);
+//     }
+    
+
     
     
     return scene;
@@ -259,7 +302,7 @@ vec4 createTrees(vec3 samplePoint) {
 
 
 vec4 createCar(vec3 p) {
-    float jumping = mix(-0.2, -0.3, abs(sin(u_time * 4.)));
+    float jumping = mix(-0.2, -0.4, abs(sin(u_time * 4.)));
     const float height = 0.5;
 
 
@@ -299,25 +342,21 @@ vec4 createCar(vec3 p) {
 
 
 vec4 map(vec3 samplePoint) {
-    vec4 scene;
-
-    
     vec4 plane = vec4(sdPlane(samplePoint), ROAD);
     if (mod(samplePoint.z + 16. * u_time, 16.) > 6.600 && samplePoint.x < 0. && samplePoint.x > -0.7) {
         plane.yzw = vec3(1.0);
     }
     
-    vec4 trees = vec4(1.0);
-    
+    vec4 trees = createTrees(samplePoint);
+
     if (samplePoint.x < -ROAD_WIDTH || samplePoint.x > ROAD_WIDTH ) {
-        trees = createTrees(samplePoint);
-        
-//         vec2 p = 1.5 * samplePoint.xz;
-//         p.y += 1.1 * u_time;
+            
+//         vec2 p = .5 * samplePoint.xz;
+//         p.y += 1.5 * u_time;
 //         vec3 noise = noise(p);
 //         plane.yzw = vec3(noise.x);
         
-//          plane.yzw = mix(GREEN_GRASS, vec3(0.392,0.700,0.084), noise.x);
+//          plane.yzw =vec3(noise.x);
         
         plane.yzw = GREEN_GRASS;
     }
@@ -325,10 +364,9 @@ vec4 map(vec3 samplePoint) {
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
 
-    scene = unionSDF(car, plane);
-	scene = unionSDF(scene, plane);
+    vec4 scene = unionSDF(car, plane);
     
-    scene = unionSDF(trees, scene);
+    scene = unionSDF(scene, trees);
     
     return scene;
 }
@@ -355,6 +393,21 @@ vec3 getNormal(vec3 p) {
         map(vec3(p.x, p.y + EPSILON, p.z)).x - map(vec3(p.x, p.y - EPSILON, p.z)).x,
         map(vec3(p.x, p.y, p.z  + EPSILON)).x - map(vec3(p.x, p.y, p.z - EPSILON)).x
     ));
+}
+
+
+float calcSoftshadow( in vec3 ro, in vec3 rd)
+{
+	float res = 1.0;
+    float t = 0.01;
+    for( int i=0; i<256; i++ )
+    {
+		float h = map( ro + rd*t ).x;
+        res = min( res, smoothstep(0.0,1.0,18.0*h/t) );
+        t += clamp( h, 0.005, 0.02 );
+        if( res < .5 || t > 0.3 ) break;
+    }
+    return clamp( res, 0.0, 1.0 );
 }
 
 
@@ -452,7 +505,8 @@ vec3 render(vec2 p, vec2 uv) {
 
         float shininess = 1.0;
     	color *= phongIllumination(vec3(2.5), vec3(1.5), vec3(0.5), shininess, p, ro);
-		color *= calcAO( p, nor );
+        // color *= calcSoftshadow(p, ro);
+		// color *= calcAO( p, nor );
 
     }
     
