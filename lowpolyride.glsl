@@ -30,6 +30,7 @@ precision highp float;
 #define ROAD vec3(0.150,0.150,0.150)
 
 #define ROAD_WIDTH 12.752
+#define TREES_ROAD_OFFSET_RIGHT ROAD_WIDTH + 2.
 
 
 // gradient background
@@ -211,9 +212,9 @@ vec4 tree3(vec3 p, float randValue) {
   return unionSDF(trunc, leaf);
 }
 
-vec4 tree4(vec3 p) {
-  vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), TRUNK);
-  vec4 leaf = vec4(sdOctahedron(p + vec3(0., -4, 0.), 2.120), TREE_LEAVES);
+vec4 tree4(vec3 p, float randValue) {
+  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0) / randValue) * randValue) , vec2(0.2,4.0) * randValue), TRUNK);
+  vec4 leaf = vec4(sdOctahedron(p + vec3(0., -3, 0.), 2.120), TREE_LEAVES);
   leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), TREE_LEAVES));
   leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -6.8, 0.), 0.7), TREE_LEAVES));
   
@@ -222,12 +223,11 @@ vec4 tree4(vec3 p) {
 }
 
 
-vec4 tree5(vec3 p) {
-	vec4 trunc = vec4(sdCappedCylinder(rotateX(PI) * p + vec3(0., -1.5, 0) , vec2(0.2,4.0)), TRUNK);
-	vec4 leaf = vec4(sdBox(p + vec3(0., -4, 0.), vec3(1.5)), TREE_LEAVES);
-	leaf = unionSDF(leaf, vec4(sdBox(p + vec3(1.2, -3.5, 1.5), vec3(0.8)), TREE_LEAVES_YELLOW));
-    leaf = unionSDF(leaf, vec4(sdBox(p + vec3(-0.9, -5.5, -1.2), vec3(0.9)), TREE_LEAVES_YELLOW));
-    
+vec4 tree5(vec3 p, float randValue) {
+	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0)) / randValue) * randValue , vec2(0.2,4.0) * randValue), TRUNK);
+	vec4 leaf = vec4(sdBox((( p + vec3(0., -4, 0.)) / randValue) * randValue, vec3(1.5) * randValue), TREE_LEAVES);
+	leaf = unionSDF(leaf, vec4(sdBox((( p + vec3(1.2, -3.5,2.5)) / randValue) * randValue, vec3(0.8, 0.5, 0.6) * randValue), TREE_LEAVES_YELLOW));
+    leaf = unionSDF(leaf, vec4(sdBox((( p + vec3(-0.9, -5.5, -1.2)) / randValue) * randValue, vec3(0.9, 0.5, 0.9) * randValue), TREE_LEAVES_YELLOW));
 
 	return unionSDF(trunc, leaf);
 }
@@ -242,22 +242,22 @@ vec4 createTrees(vec3 samplePoint) {
     
     
 
-	// vec4 tree1 = tree1(samplePoint + vec3(15.2, -2.5,  mix(zMax,  zMin, mod(u_time, 1.5))));
-	// vec4 tree2 = tree2(samplePoint + vec3(18.4, -2.2, mix(zMax, zMin, mod(2.5 + u_time, 1.5))));
-	// vec4 tree3 = tree3(samplePoint + vec3(22.2, -3.2, mix(zMax, zMin, mod(2.7 + u_time, 1.5))));
-	// vec4 tree4 = tree4(samplePoint + vec3(22.2, -2.2, mix(zMax, zMin, mod(0.2 + u_time, 1.5))));
-	// vec4 tree5 = tree5(samplePoint + vec3(20.2, -2, mix(zMax, zMin, mod(0.8 + u_time, 1.5))));
-    
-    const float rightRoadOffset = ROAD_WIDTH + 2.;
-    
-    
-
-
-    for (float i = 0.; i < 3.; i++) {
+    for (float i = 0.; i < 2.; i++) {
         float rand = random(vec2(i, i));
         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
         
-       	vec4 tree = tree3(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.))), rand2 * 0.8 + 1.); 
+       	vec4 tree = tree5(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.))), rand2 * 0.8 + 1.); 
+
+        
+        scene = unionSDF(scene, tree);
+    }
+    
+    for (float i = 3.; i < 6.; i++) {
+        float rand = random(vec2(i, i));
+        float randVal = rand + 1.5 + i + u_time;
+        float rand2 = random(vec2(ceil(randVal)));
+        
+       	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT * rand2 + 5. , -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), 0.8 + rand2 * 1.05 ); 
 
         
         scene = unionSDF(scene, tree);
