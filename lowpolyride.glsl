@@ -228,62 +228,55 @@ vec4 createTrees(vec3 samplePoint) {
     const float zMin = 15.;
     
 
-    for (float i = 1.; i < 2.; i++) {
-        float rand = random(vec2(i, i));
-        float randVal = rand + 1.5 + i + u_time;
-        float rand2 = random(vec2(ceil(randVal), i));
-        
-       	vec4 tree = tree2(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT, -2.5,  mix(zMax,  zMin, mod(randVal, 1.))), max(min(1.5, rand2 * 4.), 1.0)); 
-
-        
-        scene = unionSDF(scene, tree);
-    }
-    
-    for (float i = 13.; i < 15.; i++) {
-        float rand = random(vec2(i, i));
-        float randVal = rand + 1.5 + i + u_time;
+	for (float i = 1.; i < 3.; i++) {
+        float step = i * 20083.;
+        float rand = random(vec2(step));
+        float randVal = rand + 1.5 + step + u_time;
         float rand2 = random(vec2(ceil(randVal)));
-    
-        
-       	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rand2 + 6., -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), max(min(1.5, rand2 * 4.), 1.0)); 
+
+       	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT +  rand2 * 5., -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), 0.8 + rand * rand2); 
 
         
         scene = unionSDF(scene, tree);
     }
     
-//    for (float i = 10.; i < 12.; i++) {
-//         float rand = random(vec2(i, i));
-//         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
-        
-//        	vec4 tree = tree2(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.)))); 
+    for (float i = 1.; i < 3.; i++) {
+        float step = i * 105.;
+        float rand = random(vec2(step));
+        float randVal = rand + 1.5 + step + u_time;
+        float rand2 = random(vec2(ceil(randVal)));
+
+       	vec4 tree = tree2(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT +  rand2 * 20., -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), 0.8 + rand * rand2); 
 
         
-//         scene = unionSDF(scene, tree);
-//     }
+        scene = unionSDF(scene, tree);
+    }
     
+     for (float i = 1.; i < 3.; i++) {
+        float step = i  * 28090.;
+        float rand = random(vec2(step));
+        float randVal = rand + 1.5 + step + u_time;
+        float rand2 = random(vec2(ceil(randVal)));
 
-//      for (float i = 20.; i < 22.; i++) {
-//         float rand = random(vec2(i, i));
-//         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
-        
-//        	vec4 tree = tree3(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.)))); 
+       	vec4 tree = tree3(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT +  rand2 * 15., -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), 0.9 + rand * rand2); 
 
         
-//         scene = unionSDF(scene, tree);
-//     }
+        scene = unionSDF(scene, tree);
+    }
     
-//    for (float i = 15.; i < 18.; i++) {
-//         float rand = random(vec2(i, i));
-//         float rand2 = random(vec2(ceil(rand + 1.5 + i + u_time), i));
-        
-//        	vec4 tree = tree4(samplePoint + vec3(rightRoadOffset + 20. * rand2 , -2.5,  mix(zMax,  zMin, mod(rand + 1.5 + i + u_time , 1.)))); 
+    for (float i = 1.; i < 3.; i++) {
+        float step = i  * 13492.5;
+        float rand = random(vec2(step));
+        float randVal = rand + 1.5 + step + u_time;
+        float rand2 = random(vec2(ceil(randVal)));
+
+       	vec4 tree = tree4(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT +  rand2 * 25., -2.5,  mix(zMax,  zMin, mod(randVal , 1.))), 0.8 + rand * rand2); 
 
         
-//         scene = unionSDF(scene, tree);
-//     }
-    
+        scene = unionSDF(scene, tree);
+    }
 
-    
+
     
     return scene;
 }
