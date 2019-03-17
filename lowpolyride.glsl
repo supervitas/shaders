@@ -37,7 +37,7 @@ precision highp float;
 #define BACK_COL_TOP vec3(0.000,0.579,0.825)
 #define BACK_COL_BOTTOM vec3(0.149,0.244,0.785)
 
-#define SPEED 1.25
+#define SPEED 26.
 
 
 uniform vec2 u_resolution;
@@ -199,7 +199,7 @@ vec4 tree4(vec3 p, float randValue) {
 
 vec2 getRandByIndex(float i) {
     float rand = random(vec2(i));
-    float randVal = rand + i  + u_time * 0.75;
+    float randVal = rand + i  + u_time * SPEED * 0.02;
     
     return vec2(rand, randVal);
 }
@@ -213,18 +213,18 @@ vec4 createTrees(vec3 samplePoint) {
     const float zMin = 15.;
     const float rowWidth = 10.;
 
-// 	for (float i = 0.; i < 2.; i ++) {
-//        	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i, -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i).y , 1.))), 1.); 
-//         vec4 tree2 = tree2(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i , -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i + 5.).y, 1.))), 1.); 
-//         vec4 tree3 = tree3(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i, -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i + 10.).y, 1.))), 1.); 
-//         vec4 tree4 = tree4(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i, -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i + 15.).y, 1.))), 1.); 
+	for (float i = 0.; i < 2.; i ++) {
+       	vec4 tree = tree1(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i, -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i).y , 1.))), 1.); 
+        vec4 tree2 = tree2(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i , -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i + 5.).y, 1.))), 1.); 
+        vec4 tree3 = tree3(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i, -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i + 10.).y, 1.))), 1.); 
+        vec4 tree4 = tree4(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT + rowWidth * i, -2.5,  mix(zMax,  zMin, mod(getRandByIndex(i + 15.).y, 1.))), 1.); 
 
         
-//         scene = unionSDF(scene, tree);
-//         scene = unionSDF(scene, tree2);
-//         scene = unionSDF(scene, tree3);
-//         scene = unionSDF(scene, tree4);
-//     }
+        scene = unionSDF(scene, tree);
+        // scene = unionSDF(scene, tree2);
+        // scene = unionSDF(scene, tree3);
+        // scene = unionSDF(scene, tree4);
+    }
 
     
 //     for (float i = 1.; i < 3.; i++) {
@@ -273,7 +273,6 @@ vec4 createCar(vec3 p) {
     float jumping = mix(-0.2, -0.4, abs(sin(u_time * 4.)));
     const float height = 0.5;
 
-
     vec4 body = vec4(sdBox(p + vec3(0., jumping - height, 0), vec3(1.35, height, 2.5)), CAR_BODY);
     vec4 roof = vec4(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.35, 0.1, 1)), CAR_ROOF);
     vec4 windowBack = vec4(sdBox(rotateX(2.100) * p + vec3(0.,  2.1, 1.2), vec3(1.1, 0.1, 0.65)), CAR_GLASS);
@@ -282,15 +281,10 @@ vec4 createCar(vec3 p) {
     car = unionSDF(car, windowBack);
     
     vec4 bagazh = vec4(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(1.22, -1.15 , -2.1), vec2(0.13, 0.75)), TRUNK);
-     car = unionSDF(car, bagazh);
+    car = unionSDF(car, bagazh);
     
     vec4 bagazh2 = vec4(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(-1.22, -1.15, -2.1), vec2(0.13, 0.75)), TRUNK);
-     car = unionSDF(car, bagazh2);
-    
-    // for (float i = 0.; i < 3.; i++) {
-    //      vec2 holder = vec2(sdCappedCylinder( rotateZ(PI )  * rotateX( PI / 2.) * p + vec3(0.7 - 0.7 * i , 0., 2.85 + abs(jumping)) , vec2(0.1, 0.5)), 14.0);
-    //      car = unionSDF(car, holder);
-    // }
+    car = unionSDF(car, bagazh2);
 
 
     vec3 t = rotateZ(PI / 2.) * rotateX(PI / 2.) * p;
@@ -309,22 +303,26 @@ vec4 createCar(vec3 p) {
 }
 
 vec4 createFence(vec3 p) {
-    vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 4., -3.5, 0), vec3(.15, 1.1, 100.)), vec3(0.315,0.180,0.110));
-	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 4., -4.5, 0), vec3(.25, 0.12, 100.)), vec3(0.300,0.219,0.090));
+    vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), vec3(0.315,0.180,0.110));
+	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), vec3(0.300,0.219,0.090));
+    
+    vec4 pillarLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), vec3(0.315,0.180,0.110));
+	vec4 fenceLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), vec3(0.300,0.219,0.090));
 
-   if (mod(p.z + 16. * u_time, 16.) > .500) {
+   if (mod(p.z + SPEED * u_time, SPEED) > .5) {
        pillar.x = 0.35;
+       pillarLeft.x = 0.35;
     }
     
-    vec4 scene = unionSDF(pillar, fence);
+    vec4 fenceR = unionSDF(pillar, fence);
+    vec4 fenceL = unionSDF(pillarLeft, fenceLeft);
     
-    return scene;
+    return  unionSDF(fenceL, fenceR);
 }
-
 
 vec4 map(vec3 samplePoint) {
     vec4 plane = vec4(sdPlane(samplePoint), ROAD);
-    if (mod(samplePoint.z + 16. * u_time , 16.) > 6.600 && samplePoint.x < 0. && samplePoint.x > -0.7) {
+    if (mod(samplePoint.z + SPEED * u_time , 16.) > 6.600 && samplePoint.x < 0. && samplePoint.x > -0.7) {
         plane.yzw = vec3(1.0);
     }
     
@@ -335,7 +333,6 @@ vec4 map(vec3 samplePoint) {
         plane.yzw = GREEN_GRASS;
         // plane.yzw = grass.rgb;
     }
-
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
     vec4 fence = createFence(samplePoint);
@@ -372,12 +369,10 @@ vec3 getNormal(vec3 p) {
 }
 
 
-float calcSoftshadow( in vec3 ro, in vec3 rd)
-{
+float calcSoftshadow(in vec3 ro, in vec3 rd) {
 	float res = 1.0;
     float t = 0.01;
-    for( int i=0; i<256; i++ )
-    {
+    for( int i=0; i<256; i++ ) {
 		float h = map( ro + rd*t ).x;
         res = min( res, smoothstep(0.0,1.0,18.0*h/t) );
         t += clamp( h, 0.005, 0.02 );
@@ -458,10 +453,7 @@ float calcAO( vec3 pos, vec3 nor ) {
 
 vec3 render(vec2 p, vec2 uv) {
   // vec3 ro = vec3(mix(-2., 2., sin(u_time)), 5., -8.);
-      vec3 ro = vec3(5., 25., -10.6);
-     // ro.z += 20. * u_time;
-    // vec2 m = u_mouse / u_resolution;
-    // vec3 ro = 9.0*normalize(vec3(sin(3.0*m.x), 2.4*m.y, cos(3.0*m.x)));
+    vec3 ro = vec3(5., 25., -10.6);
     
     vec3 ta =  normalize(vec3(0., -0.1, -1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
@@ -507,7 +499,7 @@ void main() {
     vec3 color = render(p, uv);
 #endif 
  
-    // color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
+    color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
 	// color = pow(color, vec3(1. / 2.2)); // gamma correction
     // color = smoothstep(0., 1., color);
     gl_FragColor = vec4(color, 1.0);
