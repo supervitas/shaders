@@ -204,6 +204,13 @@ vec2 getRandByIndex(float i) {
     return vec2(rand, randVal);
 }
 
+vec3 pMod(const in vec3 p, const in vec3 size) {
+  vec3 pmod = p;
+  if(size.x > 0.0) pmod.x = mod(p.x + size.x * 0.5, size.x) - size.x * 0.5;
+  if(size.y > 0.0) pmod.y = mod(p.y + size.y * 0.5, size.y) - size.y * 0.5;
+  if(size.z > 0.0) pmod.z = mod(p.z + size.z * 0.5, size.z) - size.z * 0.5;
+  return pmod;
+}
 
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
@@ -255,9 +262,10 @@ vec4 createTrees(vec3 samplePoint) {
        	// vec4 tree3 = tree3(samplePoint + vec3(-TREES_ROAD_OFFSET_RIGHT - 5., -2.5,  mix(zMax,  zMin, mod(getRandByIndex(155.).y, 1.))), 1.); 
        	// vec4 tree4 = tree4(samplePoint + vec3(-TREES_ROAD_OFFSET_RIGHT - 5., -2.5,  mix(zMax,  zMin, mod(getRandByIndex(355.).y, 1.))), 1.); 
     
-    
-    float c = 5.5;
-     vec3 q = mod(samplePoint + vec3(TREES_ROAD_OFFSET_RIGHT , -.5, u_time * SPEED) , 2.5 * c)-0.5*c;
+
+ 
+
+    vec3 q = pMod(vec3(samplePoint.x - 4.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 10. ));
     vec4 t =  tree1( q, 1. );
 
     scene = unionSDF(scene, t);
@@ -333,9 +341,9 @@ vec4 map(vec3 samplePoint) {
     vec4 trees = createTrees(samplePoint);
 
     if (samplePoint.x < -ROAD_WIDTH || samplePoint.x > ROAD_WIDTH ) {
-        // vec4 grass = texture2D(grass, gl_FragCoord.xy / u_resolution);
         plane.yzw = GREEN_GRASS;
-        // plane.yzw = grass.rgb;
+    } else {
+        trees.x = 1.;
     }
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
