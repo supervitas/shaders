@@ -10,7 +10,7 @@ precision highp float;
 #define AA 1
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
-#define MAX_DIST  70. // far
+#define MAX_DIST  150. // far
 #define EPSILON 0.001
 #define PI 3.1415926535
 
@@ -230,8 +230,8 @@ vec4 createTrees(vec3 samplePoint) {
 
     vec3 tree1Repeat = domainRepition;
     vec3 tree2Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 5.5);
-    vec3 tree3Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 10.5);
-    vec3 tree4Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z - 5.5);
+    vec3 tree3Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 11.5);
+    vec3 tree4Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     vec4 tree1 = tree1(tree1Repeat, 1.);
     vec4 tree2 = tree2(tree2Repeat, 1.);
@@ -430,8 +430,8 @@ float calcAO( vec3 pos, vec3 nor ) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-  // vec3 ro = vec3(mix(-2., 2., sin(u_time)), 5., -8.);
-    vec3 ro = vec3(5., 25., -10.6);
+  vec3 ro = vec3(mix(3., 5., sin(u_time)), 18., -13.928);
+    // vec3 ro = vec3(5., 25., -10.6);
     
     vec3 ta =  normalize(vec3(0., -0.1, -1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
