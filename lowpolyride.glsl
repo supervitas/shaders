@@ -164,24 +164,26 @@ float differenceSDF(float distA, float distB) {
 }
 
 vec4 tree1(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0.,-.5,0)) / randValue) * randValue, vec2(0.2, 2.) * randValue) , TRUNK);
-  vec4 leaf = vec4(sdOctahedron(((rotateY(PI * randValue) * p + vec3(0., -3. * randValue, 0.)) / randValue) , 2.120) * randValue, TREE_LEAVES);
+  vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0.,-.5,0)) ) , vec2(0.2, 2.) * randValue) , TRUNK);
+  vec4 leaf = vec4(sdOctahedron(((rotateY(PI * randValue) * p + vec3(0., -3. * randValue, 0.)) ) , 2.120  * randValue), TREE_LEAVES);
                        
   return unionSDF(trunc, leaf);
 }
 
 vec4 tree2(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -.5, 0)) / randValue) * randValue, vec2(0.2,2.990) * randValue), TRUNK);
-  vec4 leaf = vec4(sdHexPrism(((rotateY(PI / randValue) * p + vec3(0, -3.5 * randValue, 0.)) / randValue) * randValue, vec2(1.75* randValue, 1.2 * randValue / 1.5) ), vec3(0.113,0.500,0.373));
+  vec4 trunc = vec4(sdCappedCylinder(((p + vec3(0., -.5, 0)) ) , vec2(0.2,2.990) * randValue), TRUNK);
+  vec4 leaf = vec4(sdHexPrism(((rotateY(PI / randValue) * p + vec3(0, -3.5 * randValue, 0.))), vec2(1.75* randValue, 1.2 * randValue / 1.5) ), vec3(0.113,0.500,0.373));
 
   return unionSDF(trunc, leaf);
 }
 
 vec4 tree3(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0) / randValue) * randValue) , vec2(0.2,4.0) * randValue), TRUNK);
-  vec4 leaf = vec4(sdOctahedron(p + vec3(0., -3, 0.), 2.120), TREE_LEAVES);
-  leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -5.7, 0.), 1.3), TREE_LEAVES));
-  leaf = unionSDF(leaf, vec4(sdOctahedron(p + vec3(0., -6.8, 0.), 0.7), TREE_LEAVES));
+  vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,4.0) * randValue), TRUNK);
+  mat3 rotationLeaf = rotateY(PI / randValue);
+    
+  vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.))) , 2.120 * randValue), TREE_LEAVES);
+    
+  leaf = unionSDF(leaf, vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -5.7 * randValue, 0.)) ) , 1.3 * randValue), TREE_LEAVES));
   
 
   return unionSDF(trunc, leaf);
@@ -189,10 +191,13 @@ vec4 tree3(vec3 p, float randValue) {
 
 
 vec4 tree4(vec3 p, float randValue) {
-	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0)) / randValue) * randValue , vec2(0.2,4.0) * randValue), TRUNK);
-	vec4 leaf = vec4(sdBox((( p + vec3(0., -4, 0.)) / randValue) * randValue, vec3(1.5) * randValue), TREE_LEAVES);
-	leaf = unionSDF(leaf, vec4(sdBox((( p + vec3(1.2, -3.5,2.5)) / randValue) * randValue, vec3(0.8, 0.5, 0.6) * randValue), TREE_LEAVES_YELLOW));
-    leaf = unionSDF(leaf, vec4(sdBox((( p + vec3(-1.9 , -5.2 - randValue , -1. - randValue)) / randValue) * randValue, vec3(0.8, 0.5, 0.9) * randValue), TREE_LEAVES_YELLOW));
+	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0)) )  , vec2(0.2,4.0) * randValue), TRUNK);
+    
+    mat3 rotationLeaf = rotateY(PI / randValue);
+    
+	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. * randValue, 0.)) ) , vec3(1.5) * randValue), TREE_LEAVES);
+	leaf = unionSDF(leaf, vec4(sdBox((( rotationLeaf * p + vec3(1.2, -3.5 * randValue, 2.5))) , vec3(0.8, 0.5, 0.6) * randValue), TREE_LEAVES_YELLOW));
+    leaf = unionSDF(leaf, vec4(sdBox((( rotationLeaf * p + vec3(-1.9 , -5.2 * randValue , -1.)) ) , vec3(0.8, 0.5, 0.9) * randValue), TREE_LEAVES_YELLOW));
 
 	return unionSDF(trunc, leaf);
 }
@@ -216,15 +221,16 @@ vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
     float abs = abs(sin(u_time));
+
     vec3 tree1Repeat = pMod(vec3(samplePoint.x - 4.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
     vec3 tree2Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 5.5);
     vec3 tree3Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 10.5);
     vec3 tree4Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z - 5.5);
     
-    vec4 tree1 = tree1( tree1Repeat, abs);
+    vec4 tree1 = tree1(tree1Repeat, abs);
     vec4 tree2 = tree2(tree2Repeat, abs);
-    vec4 tree3 = tree3(tree3Repeat, 1.);
-    vec4 tree4 = tree4(tree4Repeat, 1.);
+    vec4 tree3 = tree3(tree3Repeat, abs);
+    vec4 tree4 = tree4(tree4Repeat, abs);
 
     scene = unionSDF(scene, tree1);
     scene = unionSDF(scene, tree2);
@@ -440,6 +446,7 @@ vec3 render(vec2 p, vec2 uv) {
         float shininess = 5.824;
 
         color *= phongIllumination(vec3(1.5), vec3(1.5), vec3(1.1), shininess, p , ro, vec3(0.0, 205.0, 0.0));
+        // color *= vec3(2.5);
         // color *= calcSoftshadow(p, ro);
 		// color *= calcAO( p, nor );
 
