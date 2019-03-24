@@ -248,34 +248,30 @@ vec4 createTrees(vec3 samplePoint) {
 
 
 vec4 createCar(vec3 p) {
-    float jumping = mix(-0.2, -0.4, abs(sin(u_time * 4.)));
-    const float height = 0.5;
 
-    vec4 body = vec4(sdBox(p + vec3(0., jumping - height, 0), vec3(1.35, height, 2.5)), CAR_BODY);
-    vec4 roof = vec4(sdBox(p + vec3(0., jumping - 2.5, 0), vec3(1.35, 0.1, 1)), CAR_ROOF);
-    vec4 windowBack = vec4(sdBox(rotateX(2.100) * p + vec3(0.,  2.1, 1.2), vec3(1.1, 0.1, 0.65)), CAR_GLASS);
-    
-    vec4 car = unionSDF(body, roof);
-    car = unionSDF(car, windowBack);
-    
-    vec4 bagazh = vec4(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(1.22, -1.15 , -2.1), vec2(0.13, 0.75)), TRUNK);
-    car = unionSDF(car, bagazh);
-    
-    vec4 bagazh2 = vec4(sdCappedCylinder(rotateZ(PI ) * rotateX(3.726)  * p + vec3(-1.22, -1.15, -2.1), vec2(0.13, 0.75)), TRUNK);
-    car = unionSDF(car, bagazh2);
+vec4 createCar(vec3 p) {
+    vec4 car =  vec4(sdRoundBox(p + vec3(0., -1.5, 0), vec3(1.35, 0.5, 3.5), 1.5), CAR_BODY);;    
 
 
-    vec3 t = rotateZ(PI / 2.) * rotateX(PI / 2.) * p;
+    vec3 t = rotateZ(PI / 2.) * p;
+    
+ 
+ 
+
+
+    car.x = opSubtraction( sdCappedCylinder(t + vec3(-.3, 2.5, -2.2), vec2(1., 0.5)), car.x);
+    car.x = opSubtraction( sdCappedCylinder(t + vec3(-.3, 2.5, 2.), vec2(1., 0.5)), car.x);
+
    
-    vec4 wheel = vec4(sdTorus(t + (vec3(1.5, 1.52, .1) ), vec2(0.5,0.2) ), CAR_TIRES);
-    vec4 wheel2 = vec4(sdTorus(t + vec3(-1.5, 1.52, .1), vec2(0.5,0.2)), CAR_TIRES);
-    vec4 wheel3 = vec4(sdTorus(t + vec3(-1.5, -1.52, .1), vec2(0.5,0.2)), CAR_TIRES);
-    vec4 wheel4 = vec4(sdTorus(t + vec3(1.5, -1.52, .1), vec2(0.5,0.2)), CAR_TIRES);
+    vec4 wheel = vec4(sdCappedCylinder(t + vec3(-0.2, .4, 2.1), vec2(1., 2.1)), CAR_TIRES);
+    vec4 wheel2 = vec4(sdCappedCylinder(t + vec3(-0.2, .4, -2.1), vec2(1., 2.2)), CAR_TIRES);
+
     
     car = unionSDF(car, wheel);
     car = unionSDF(car, wheel2);
-    car = unionSDF(car, wheel3);
-    car = unionSDF(car, wheel4);
+    
+
+
     
     return car;
 }
