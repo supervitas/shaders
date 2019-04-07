@@ -8,7 +8,7 @@ precision highp float;
 
 
 #define AA 1
-#define MAX_MARCHING_STEPS 255
+#define MAX_MARCHING_STEPS 355
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  150. // far
 #define EPSILON 0.001
@@ -21,9 +21,6 @@ precision highp float;
 #define TRUNK vec3(0.175,0.050,0.005)
 
 #define CAR_BODY vec3(255,173,0)
-#define CAR_ROOF vec3(0.625,0.282,0.086)
-#define CAR_GLASS vec3(0.388,0.405,0.380)
-#define CAR_TOP_BAG vec3(0.302,0.877,0.960)
 #define CAR_TIRES vec3(0.060,0.060,0.060)
 
 #define GREEN_GRASS vec3(0.133,0.175,0.154)
@@ -253,7 +250,7 @@ vec4 createTrees(vec3 samplePoint) {
 vec4 createCar(vec3 p) {
     float jumping = mix(0., .3, sin(u_time * 5.));
     
-   	vec4 car = vec4(sdBox(p + vec3(0., -2. - jumping, 0), vec3(2., 2., 4.5)), vec3(0.170,0.274,0.325));
+   	vec4 car = vec4(sdBox(p + vec3(0., -2. - jumping, 0), vec3(2., 2., 3.9)), vec3(0.170,0.274,0.325));
 	float subFront = sdBox(  p + vec3(0., -3. - jumping, -3.5), vec3(2.5, 1.3, 1.2));
     float subBack = sdBox(  p + vec3(0., -3. - jumping, 3.5), vec3(2.5, 1.3, 1.2));
     
@@ -437,10 +434,10 @@ float calcAO( vec3 pos, vec3 nor ) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-  vec3 ro = vec3(mix(3., 5., sin(u_time)), 18., -13.928);
-    // vec3 ro = vec3(5., 25., -10.6);
+  // vec3 ro = vec3(mix(3., 5., sin(u_time)), 18., -13.928);
+    vec3 ro = vec3(4., 22., -18.6);
     
-    vec3 ta =  normalize(vec3(0., -0.1, -1.000));
+    vec3 ta =  normalize(vec3(0.,0.,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
