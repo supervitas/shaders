@@ -16,21 +16,18 @@ precision highp float;
 
 
 
-#define TREE_LEAVES vec3(0.154,0.970,0.153)
-#define TREE_LEAVES_YELLOW vec3(0.359,0.485,0.121)
 #define TRUNK vec3(0.175,0.050,0.005)
 
-#define CAR_BODY vec3(255,173,0)
 #define CAR_TIRES vec3(0.060,0.060,0.060)
 
-#define GREEN_GRASS vec3(0.133,0.175,0.154)
+#define GREEN_GRASS vec3(0.255,0.152,0.036)
 #define ROAD vec3(0.150,0.150,0.150)
 
 #define ROAD_WIDTH 12.752
 #define TREES_ROAD_OFFSET_RIGHT ROAD_WIDTH + 2.
 
 
-// gradient background
+
 #define BACK_COL_TOP vec3(0.000,0.579,0.825)
 #define BACK_COL_BOTTOM vec3(0.149,0.244,0.785)
 
@@ -229,16 +226,20 @@ vec3 pMod(const in vec3 p, const in vec3 size) {
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
-    vec3 domainRepition = pMod(vec3(samplePoint.x - 5., samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
+    vec3 domainRepition = pMod(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
+    
+    vec3 domainRepition2 = pMod(vec3(samplePoint.x - 3.5, samplePoint.y - 2.5, samplePoint.z + 5.5 + u_time * SPEED), vec3(12.5, 0., 25. ));
+    vec3 domainRepition3 = pMod(vec3(samplePoint.x + 3.5, samplePoint.y - 2.5, samplePoint.z + 11.5 + u_time * SPEED), vec3(12.5, 0., 25. ));
+    vec3 domainRepition4 = pMod(vec3(samplePoint.x - 6.5, samplePoint.y - 2.5, samplePoint.z - 6.5 + u_time * SPEED), vec3(12.5, 0., 25. ));
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );
-    vec3 tree3Repeat = vec3(tree1Repeat.x + 1.5, tree1Repeat.y, tree1Repeat.z + 11.5);
-    vec3 tree4Repeat = vec3(tree1Repeat.x - 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
+    vec3 tree2Repeat = domainRepition2;
+    vec3 tree3Repeat = domainRepition3;
+    vec3 tree4Repeat = domainRepition4;
     
-
     
-    vec4 tree1 = tree1(tree1Repeat, 1.);
+    float scaleDistance = mix(0.1, 1., (1.));
+    vec4 tree1 = tree1(tree1Repeat, scaleDistance);
     vec4 tree2 = tree2(tree2Repeat, 1.);
     vec4 tree3 = tree3(tree3Repeat, 1.);
     vec4 tree4 = tree4(tree4Repeat, 1.);
@@ -290,11 +291,14 @@ vec4 createCar(vec3 p) {
 }
 
 vec4 createFence(vec3 p) {
-    vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), vec3(0.315,0.180,0.110));
-	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), vec3(0.300,0.219,0.090));
+    const vec3 pillarColorMain = vec3(0.355,0.340,0.337);
+    const vec3 pillarColorFence = vec3(0.255,0.243,0.248); 
+        
+    vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColorMain);
+	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColorFence);
     
-    vec4 pillarLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), vec3(0.315,0.180,0.110));
-	vec4 fenceLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), vec3(0.300,0.219,0.090));
+    vec4 pillarLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColorMain);
+	vec4 fenceLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColorFence);
 
    if (mod(p.z + SPEED * u_time, SPEED) > .5) {
        pillar.x = 0.35;
