@@ -138,6 +138,9 @@ vec4 unionSDF(vec4 d1, vec4 d2) {
     return (d1.x<d2.x) ? d1 : d2;
 }
 
+float opSubtraction( float d1, float d2 ) { return max(-d1,d2); }
+
+
 float opRepSphere( vec3 p, vec3 c, float radius) {
     vec3 q = mod(p,c)-0.5*c;
     return sdSphere( q, radius);
@@ -248,31 +251,39 @@ vec4 createTrees(vec3 samplePoint) {
 
 
 vec4 createCar(vec3 p) {
-
-vec4 createCar(vec3 p) {
-    vec4 car =  vec4(sdRoundBox(p + vec3(0., -1.5, 0), vec3(1.35, 0.5, 3.5), 1.5), CAR_BODY);;    
-
-
-    vec3 t = rotateZ(PI / 2.) * p;
+    float jumping = mix(0., .3, sin(u_time * 5.));
     
- 
- 
+   	vec4 car = vec4(sdBox(p + vec3(0., -2. - jumping, 0), vec3(2., 2., 4.5)), vec3(0.170,0.274,0.325));
+	float subFront = sdBox(  p + vec3(0., -3. - jumping, -3.5), vec3(2.5, 1.3, 1.2));
+    float subBack = sdBox(  p + vec3(0., -3. - jumping, 3.5), vec3(2.5, 1.3, 1.2));
+    
+    car.x = opSubtraction(subFront, car.x);
+    car.x = opSubtraction(subBack, car.x);
+    
+    vec4 windowBack =  vec4(sdBox(   p + vec3(0., -3. - jumping, 2.3), vec3(1.3, .43, 0.01)) - 0.3, vec3(0.505,0.540,0.510));
+    vec4 windowLeft =  vec4(sdBox(rotateY(-1.548) * p + vec3(0., -3. - jumping, 1.8), vec3(1.3, .43, 0.01)) - 0.3, vec3(0.505,0.540,0.510));
+    car = unionSDF(car, windowBack);
+    car = unionSDF(car, windowLeft);
 
 
-    car.x = opSubtraction( sdCappedCylinder(t + vec3(-.3, 2.5, -2.2), vec2(1., 0.5)), car.x);
-    car.x = opSubtraction( sdCappedCylinder(t + vec3(-.3, 2.5, 2.), vec2(1., 0.5)), car.x);
-
+    vec3 t =  rotateZ(PI / 2.) * p;
    
-    vec4 wheel = vec4(sdCappedCylinder(t + vec3(-0.2, .4, 2.1), vec2(1., 2.1)), CAR_TIRES);
-    vec4 wheel2 = vec4(sdCappedCylinder(t + vec3(-0.2, .4, -2.1), vec2(1., 2.2)), CAR_TIRES);
+    vec3 wheelBackPosition = t + vec3(-0.2 - jumping / 2., .4 , 2.1);
+    vec3 wheelFrontPosition = t + vec3(-0.2 - jumping / 2., .4, -2.1);
+    
+    vec4 wheel = vec4(sdCappedCylinder(wheelBackPosition, vec2(1., 2.1)), CAR_TIRES);
+    vec4 wheel2 = vec4(sdCappedCylinder(wheelFrontPosition, vec2(1., 2.2)), CAR_TIRES);
+    
+    vec4 wheelWhite = vec4(sdCappedCylinder(wheelBackPosition, vec2(.4, 2.1)), vec3(1.));
+    vec4 wheelWhite2 = vec4(sdCappedCylinder(wheelFrontPosition, vec2(.4, 2.2)), vec3(1.));
 
     
     car = unionSDF(car, wheel);
     car = unionSDF(car, wheel2);
     
+    car = unionSDF(car, wheelWhite);
+    car = unionSDF(car, wheelWhite2);
 
-
-    
     return car;
 }
 
