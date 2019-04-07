@@ -92,6 +92,12 @@ float sdBox( vec3 p, vec3 b ) {
   return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0); // remove this line for an only partially signed sdf 
 }
 
+float piramidSDF(vec3 p, vec3 size) {
+    vec3 ap = abs(p);
+    vec3 d = ap - size;
+    return max(dot(normalize(size), d), -p.y);
+}
+
 float sdCappedCylinder( vec3 p, vec2 h ) {
   vec2 d = abs(vec2(length(p.xz),p.y)) - h;
   return min(max(d.x,d.y),0.0) + length(max(d,0.0));
@@ -164,29 +170,29 @@ float differenceSDF(float distA, float distB) {
 }
 
 vec4 tree1(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0.,-.5,0)) ) , vec2(0.2, 2.) * randValue) , TRUNK);
+  	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -.5, 0)) ) , vec2(0.15, 2.) * randValue) , TRUNK);
 	float rotationLeaf = 1.0;
-  vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.)) ) , 2.120  * randValue), TREE_LEAVES);
+  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.)) ) , 2.120  * randValue), vec3(0.915,0.191,0.094));
                        
   return unionSDF(trunc, leaf);
 }
 
 vec4 tree2(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder(((p + vec3(0., -.5, 0)) ) , vec2(0.2,2.990) * randValue), TRUNK);
-        float rotationLeaf = 1.0;
-  vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.5 * randValue, 0.))), vec2(1.75* randValue, 1.2 * randValue) ), vec3(0.113,0.500,0.373));
+ 	 vec4 trunc = vec4(sdCappedCylinder(((p + vec3(0., -.5, 0)) ) , vec2(0.5,2.990) * randValue), TRUNK);
+	float rotationLeaf = 1.0;
+    
+	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.8, 1., 1.2) * randValue), vec3(0.500,0.482,0.171));
 
   return unionSDF(trunc, leaf);
 }
 
 vec4 tree3(vec3 p, float randValue) {
-  vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,4.0) * randValue), TRUNK);
+     float scale = 1.1 * randValue;
+  	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,3.0) * scale), TRUNK);
   // mat3 rotationLeaf = rotateY(PI / randValue);
-        float rotationLeaf = 1.0;
+    float rotationLeaf = 1.0;
     
-  vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.))) , 2.120 * randValue), TREE_LEAVES);
-    
-  leaf = unionSDF(leaf, vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -5.7 * randValue, 0.)) ) , 1.3 * randValue), TREE_LEAVES));
+	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.5, 1.2) * scale ), vec3(0.500,0.414,0.075));
   
 
   return unionSDF(trunc, leaf);
@@ -194,14 +200,13 @@ vec4 tree3(vec3 p, float randValue) {
 
 
 vec4 tree4(vec3 p, float randValue) {
-	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0)) )  , vec2(0.2,4.0) * randValue), TRUNK);
+    float scale = 1.3 * randValue;
+	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0))), vec2(0.4,4.0) * scale), TRUNK);
     
-    // mat3 rotationLeaf = rotateY(PI / randValue);
-    float rotationLeaf = 1.0;
+    mat3 rotationLeaf = rotateY(PI / randValue);
+    // float rotationLeaf = 1.0;
     
-	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. * randValue, 0.)) ) , vec3(1.5) * randValue), TREE_LEAVES);
-	leaf = unionSDF(leaf, vec4(sdBox((( rotationLeaf * p + vec3(1.2, -3.5 * randValue, 2.5))) , vec3(0.8, 0.5, 0.6) * randValue), TREE_LEAVES_YELLOW));
-    leaf = unionSDF(leaf, vec4(sdBox((( rotationLeaf * p + vec3(-1.9 , -5.2 * randValue , -1.)) ) , vec3(0.8, 0.5, 0.9) * randValue), TREE_LEAVES_YELLOW));
+	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.690,0.411,0.121));
 
 	return unionSDF(trunc, leaf);
 }
@@ -224,14 +229,14 @@ vec3 pMod(const in vec3 p, const in vec3 size) {
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
-    float abs = abs(sin(u_time));
-    
-    vec3 domainRepition = pMod(vec3(samplePoint.x - 4.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
+    vec3 domainRepition = pMod(vec3(samplePoint.x - 5., samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 5.5);
-    vec3 tree3Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z + 11.5);
-    vec3 tree4Repeat = vec3(tree1Repeat.x, tree1Repeat.y, tree1Repeat.z - 6.5);
+    vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );
+    vec3 tree3Repeat = vec3(tree1Repeat.x + 1.5, tree1Repeat.y, tree1Repeat.z + 11.5);
+    vec3 tree4Repeat = vec3(tree1Repeat.x - 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
+    
+
     
     vec4 tree1 = tree1(tree1Repeat, 1.);
     vec4 tree2 = tree2(tree2Repeat, 1.);
