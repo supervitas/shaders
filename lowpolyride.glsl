@@ -235,7 +235,7 @@ vec4 createTrees(vec3 samplePoint) {
     vec3 tree4Repeat = vec3(tree1Repeat.x - 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     
-    float scaleDistance = min(1., (1.9 + -samplePoint.z * 0.02));
+    float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
     vec4 tree1 = tree1(tree1Repeat, scaleDistance);
     vec4 tree2 = tree2(tree2Repeat, scaleDistance);
     vec4 tree3 = tree3(tree3Repeat, scaleDistance);
@@ -440,8 +440,8 @@ float calcAO( vec3 pos, vec3 nor ) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-  // vec3 ro = vec3(mix(3., 5., sin(u_time)), 18., -13.928);
-    vec3 ro = vec3(4., 22., -18.6);
+
+    vec3 ro = vec3(6., 22., -13.6);
     
     vec3 ta =  normalize(vec3(0.,0.,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
