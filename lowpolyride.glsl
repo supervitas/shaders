@@ -8,7 +8,7 @@ precision highp float;
 
 
 #define AA 1
-#define MAX_MARCHING_STEPS 355
+#define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  150. // far
 #define EPSILON 0.001
@@ -228,21 +228,18 @@ vec4 createTrees(vec3 samplePoint) {
     
     vec3 domainRepition = pMod(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
     
-    vec3 domainRepition2 = pMod(vec3(samplePoint.x - 3.5, samplePoint.y - 2.5, samplePoint.z + 5.5 + u_time * SPEED), vec3(12.5, 0., 25. ));
-    vec3 domainRepition3 = pMod(vec3(samplePoint.x + 3.5, samplePoint.y - 2.5, samplePoint.z + 11.5 + u_time * SPEED), vec3(12.5, 0., 25. ));
-    vec3 domainRepition4 = pMod(vec3(samplePoint.x - 6.5, samplePoint.y - 2.5, samplePoint.z - 6.5 + u_time * SPEED), vec3(12.5, 0., 25. ));
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = domainRepition2;
-    vec3 tree3Repeat = domainRepition3;
-    vec3 tree4Repeat = domainRepition4;
+    vec3 tree2Repeat = vec3(tree1Repeat.x - 3.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
+    vec3 tree3Repeat = vec3(tree1Repeat.x - 2.5, tree1Repeat.y, tree1Repeat.z + 11.5);
+    vec3 tree4Repeat = vec3(tree1Repeat.x - 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     
-    float scaleDistance = mix(0.1, 1., (1.));
+    float scaleDistance = min(1., (1.9 + -samplePoint.z * 0.02));
     vec4 tree1 = tree1(tree1Repeat, scaleDistance);
-    vec4 tree2 = tree2(tree2Repeat, 1.);
-    vec4 tree3 = tree3(tree3Repeat, 1.);
-    vec4 tree4 = tree4(tree4Repeat, 1.);
+    vec4 tree2 = tree2(tree2Repeat, scaleDistance);
+    vec4 tree3 = tree3(tree3Repeat, scaleDistance);
+    vec4 tree4 = tree4(tree4Repeat, scaleDistance);
 
     scene = unionSDF(scene, tree1);
     scene = unionSDF(scene, tree2);
@@ -464,9 +461,10 @@ vec3 render(vec2 p, vec2 uv) {
 
         float shininess = 5.824;
 
-        color *= phongIllumination(vec3(1.8), vec3(2.5), vec3(1.100,0.893,0.064), shininess, p ,  ro, vec3(-10.0, 20.0, 30.));
+        vec3 lightPosition =  vec3(-10.0, 20.0, 30.);
+        color *= phongIllumination(vec3(1.8), vec3(2.5), vec3(1.100,0.893,0.064), shininess, p ,  ro, lightPosition);
         // color *= vec3(2.5);
-        // color *= calcSoftshadow(p, ro);
+        // color *= calcSoftshadow(p, vec3(0.3,3 , 1.));
 		// color *= calcAO( p, nor );
 
     }
@@ -493,6 +491,6 @@ void main() {
  
     color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
 	// color = pow(color, vec3(1. / 2.2)); // gamma correction
-    // color = smoothstep(0., 1., color);
+    color = smoothstep(0., .7, color);
     gl_FragColor = vec4(color, 1.0);
 }
