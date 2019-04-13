@@ -26,11 +26,6 @@ precision highp float;
 #define ROAD_WIDTH 12.752
 #define TREES_ROAD_OFFSET_RIGHT ROAD_WIDTH + 2.
 
-
-
-#define BACK_COL_TOP vec3(0.000,0.579,0.825)
-#define BACK_COL_BOTTOM vec3(0.149,0.244,0.785)
-
 #define SPEED 26.
 
 
@@ -43,11 +38,6 @@ float random (in vec2 _st) {
     return fract(sin(dot(_st.xy,
                          vec2(12.9898,78.233)))*
         43758.5453123);
-}
-
-
-vec3 background(vec2 uv) {
-    return mix(BACK_COL_TOP, BACK_COL_BOTTOM, uv.y);
 }
 
 mat3 rotateX(float theta) {
@@ -80,9 +70,6 @@ mat3 rotateZ(float theta) {
     );
 }
 
-float sdSphere( vec3 p, float s ) {
-  return length(p)-s;
-}
 
 float sdBox( vec3 p, vec3 b ) {
   vec3 d = abs(p) - b;
@@ -100,10 +87,7 @@ float sdCappedCylinder( vec3 p, vec2 h ) {
   return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
 
-float sdTriPrism(vec3 p, vec2 h) {
-    vec3 q = abs(p);
-    return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
-}
+
 
 float sdOctahedron(in vec3 p, in float s) {
     p = abs(p);
@@ -130,41 +114,12 @@ float sdTorus( vec3 p, vec2 t ) {
   return length(q)-t.y;
 }
 
-vec4 intersectSDF(vec4 d1, vec4 d2) {
-	return (d1.x>d2.x) ? d1 : d2;
-}
 
 vec4 unionSDF(vec4 d1, vec4 d2) {
     return (d1.x<d2.x) ? d1 : d2;
 }
 
 float opSubtraction( float d1, float d2 ) { return max(-d1,d2); }
-
-
-float opRepSphere( vec3 p, vec3 c, float radius) {
-    vec3 q = mod(p,c)-0.5*c;
-    return sdSphere( q, radius);
-}
-
-vec4 opSmoothUnion( vec4 d1, vec4 d2, float k ) {
-    float h = clamp( 0.5 + 0.5*(d2.x - d1.x) / k, 0.0, 1.0 );
-    return mix( d2, d1, h ) - k*h*(1.0-h); 
-}
-
-vec2 opSmoothSubtraction( vec2 d1, vec2 d2, float k ) {
-    float h = clamp( 0.5 - 0.5*(d2.x + d1.x) /k, 0.0, 1.0 );
-    return mix( d2, -d1, h ) + k*h*(1.0-h); 
-}
-
-vec2 opSmoothIntersection( vec2 d1, vec2 d2, float k ) {
-    float h = clamp( 0.5 - 0.5*(d2.x - d1.x) / k, 0.0, 1.0 );
-    return mix( d2, d1, h ) + k * h * (1.0 - h); 
-}
-
-
-float differenceSDF(float distA, float distB) {
-    return max(distA, -distB);
-}
 
 vec4 tree1(vec3 p, float randValue,  mat3 rotationLeaf) {
   	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -.5, 0)) ) , vec2(0.15, 2.) * randValue) , TRUNK);
@@ -203,17 +158,15 @@ vec3 pModXZ(vec3 p, const in vec3 size) {
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
-    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));
-    
+    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
     vec3 tree2Repeat = vec3(tree1Repeat.x - 3.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
     vec3 tree3Repeat = vec3(tree1Repeat.x - 2.5, tree1Repeat.y, tree1Repeat.z + 11.5);
     vec3 tree4Repeat = vec3(tree1Repeat.x - 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
-    
     float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
-    mat3 rotationLeaf = rotateY(PI / scaleDistance);
+    mat3 rotationLeaf = rotateY(PI * scaleDistance);
     
     vec4 tree1 = tree1(tree1Repeat, scaleDistance, rotationLeaf);
     vec4 tree2 = tree2(tree2Repeat, scaleDistance, rotationLeaf);
@@ -239,16 +192,15 @@ vec4 createCar(vec3 p) {
     car.x = opSubtraction(subFront, car.x);
     car.x = opSubtraction(subBack, car.x);
     
-    vec4 windowBack =  vec4(sdBox(   p + vec3(0., -3. - jumping, 2.3), vec3(1.3, .43, 0.01)) - 0.3, vec3(0.505,0.540,0.510));
+    vec4 windowBack =  vec4(sdBox(p + vec3(0., -3. - jumping, 2.3), vec3(1.3, .43, 0.01)) - 0.3, vec3(0.505,0.540,0.510));
     vec4 windowLeft =  vec4(sdBox(rotateY(-1.548) * p + vec3(0., -3. - jumping, 1.8), vec3(1.3, .43, 0.01)) - 0.3, vec3(0.505,0.540,0.510));
     car = unionSDF(car, windowBack);
     car = unionSDF(car, windowLeft);
 
-
-    vec3 t =  rotateZ(PI / 2.) * p;
+    vec3 t =  rotateZ(1.564) * p;
    
-    vec3 wheelBackPosition = t + vec3(-0.2 - jumping / 2., .4 , 2.1);
-    vec3 wheelFrontPosition = t + vec3(-0.2 - jumping / 2., .4, -2.1);
+    vec3 wheelBackPosition = t + vec3(-0.2 - jumping * .5, .4 , 2.1);
+    vec3 wheelFrontPosition = t + vec3(-0.2 - jumping * .5, .4, -2.1);
     
     vec4 wheel = vec4(sdCappedCylinder(wheelBackPosition, vec2(1., 2.1)), CAR_TIRES);
     vec4 wheel2 = vec4(sdCappedCylinder(wheelFrontPosition, vec2(1., 2.2)), CAR_TIRES);
@@ -365,6 +317,7 @@ vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye, vec
     if (dotRV < 0.0) { // Light reflection in opposite direction as viewer, apply only diffuse component
         return lightIntensity * (k_d * dotLN);
     }
+    
     return lightIntensity * (k_d * dotLN + k_s * pow(dotRV, alpha));
 }
 
@@ -428,25 +381,21 @@ vec3 render(vec2 p, vec2 uv) {
     
     vec3 color = vec3(1.0);
     vec4 scene = raymarsh(ro, rd, MIN_DIST, MAX_DIST);
-    
-    if (scene.x > MAX_DIST - EPSILON) { // background
-        color = background(uv);
-    } else {
-       color = scene.yzw;
-        
-         vec3 p = ro + scene.x * rd;
-         vec3 nor = getNormal(p);
-     
 
-        float shininess = 5.824;
+   color = scene.yzw;
 
-        vec3 lightPosition =  vec3(-10.0, 20.0, 30.);
-        color *= phongIllumination(vec3(1.8), vec3(2.5), vec3(1.100,0.893,0.064), shininess, p ,  ro, lightPosition);
-        // color *= vec3(2.5);
-        // color *= calcSoftshadow(p, vec3(0.3,3 , 1.));
-		// color *= calcAO( p, nor );
+     vec3 point = ro + scene.x * rd;
+     vec3 nor = getNormal(point);
 
-    }
+
+    float shininess = 5.824;
+
+    vec3 lightPosition =  vec3(-10.0, 20.0, 30.);
+    color *= phongIllumination(vec3(1.8), vec3(2.5), vec3(1.100,0.893,0.064), shininess, point ,  ro, lightPosition);
+    // color *= vec3(2.5);
+    // color *= calcSoftshadow(p, vec3(0.3,3 , 1.));
+    // color *= calcAO( p, nor );
+
     
 	return color;
 }
