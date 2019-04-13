@@ -5,8 +5,6 @@
 precision highp float;
 #endif
 
-
-
 #define AA 1
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
@@ -14,18 +12,11 @@ precision highp float;
 #define EPSILON 0.001
 #define PI 3.1415926535
 
-
-
 #define TRUNK vec3(0.175,0.050,0.005)
-
 #define CAR_TIRES vec3(0.060,0.060,0.060)
-
-#define GREEN_GRASS vec3(0.255,0.152,0.036)
 #define ROAD vec3(0.150,0.150,0.150)
-
 #define ROAD_WIDTH 12.752
 #define TREES_ROAD_OFFSET_RIGHT ROAD_WIDTH + 2.
-
 #define SPEED 26.
 
 
@@ -33,12 +24,6 @@ uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
 
-
-float random (in vec2 _st) {
-    return fract(sin(dot(_st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
-}
 
 mat3 rotateX(float theta) {
     float c = cos(theta);
@@ -86,8 +71,6 @@ float sdCappedCylinder( vec3 p, vec2 h ) {
   vec2 d = abs(vec2(length(p.xz),p.y)) - h;
   return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
-
-
 
 float sdOctahedron(in vec3 p, in float s) {
     p = abs(p);
@@ -158,7 +141,7 @@ vec3 pModXZ(vec3 p, const in vec3 size) {
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
-    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
+    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time  * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
     vec3 tree2Repeat = vec3(tree1Repeat.x - 3.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
@@ -236,7 +219,7 @@ vec4 createFence(vec3 p) {
     vec4 fenceR = unionSDF(pillar, fence);
     vec4 fenceL = unionSDF(pillarLeft, fenceLeft);
     
-    return  unionSDF(fenceL, fenceR);
+    return unionSDF(fenceL, fenceR);
 }
 
 vec4 map(vec3 samplePoint) {
@@ -248,7 +231,7 @@ vec4 map(vec3 samplePoint) {
     vec4 trees = createTrees(samplePoint);
 
     if (samplePoint.x < -ROAD_WIDTH || samplePoint.x > ROAD_WIDTH ) {
-        plane.yzw = GREEN_GRASS;
+        plane.yzw = vec3(0.255,0.152,0.036);
     } else {
         trees.x = 1.;
     }
