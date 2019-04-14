@@ -24,7 +24,6 @@ uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
 
-
 mat3 rotateX(float theta) {
     float c = cos(theta);
     float s = sin(theta);
@@ -87,7 +86,6 @@ float sdHexPrism( vec3 p, vec2 h ) {
     return min(max(d.x,d.y), 0.0) + length(max(d, 0.0));
 }
 
-
 float sdPlane( vec3 p ) {
 	return p.y;
 }
@@ -96,7 +94,6 @@ float sdTorus( vec3 p, vec2 t ) {
   vec2 q = vec2(length(p.xz)-t.x,p.y);
   return length(q)-t.y;
 }
-
 
 vec4 unionSDF(vec4 d1, vec4 d2) {
     return (d1.x<d2.x) ? d1 : d2;
@@ -202,19 +199,19 @@ vec4 createCar(vec3 p) {
 }
 
 vec4 createFence(vec3 p) {
-    const vec3 pillarColorMain = vec3(0.355,0.340,0.337);
-    const vec3 pillarColorFence = vec3(0.255,0.243,0.248); 
-        
-    vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColorMain);
-	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColorFence);
-    
-    vec4 pillarLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColorMain);
-	vec4 fenceLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColorFence);
+    const vec3 pillarColor = vec3(0.165,0.158,0.165);
 
-   if (mod(p.z + SPEED * u_time, SPEED) > .5) {
-       pillar.x = 0.35;
-       pillarLeft.x = 0.35;
-    }
+        
+    vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColor);
+	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColor);
+    
+    vec4 pillarLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColor);
+	vec4 fenceLeft = vec4(sdBox(p + vec3(-TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColor);
+
+    float needsCut = step(mod(p.z + SPEED * u_time, SPEED), 0.5);
+    
+    pillar.x = mix(1., pillar.x, needsCut);
+    pillarLeft.x = mix( 1., pillarLeft.x, needsCut);
     
     vec4 fenceR = unionSDF(pillar, fence);
     vec4 fenceL = unionSDF(pillarLeft, fenceLeft);
@@ -222,20 +219,19 @@ vec4 createFence(vec3 p) {
     return unionSDF(fenceL, fenceR);
 }
 
-vec4 map(vec3 samplePoint) {
-    vec4 plane = vec4(sdPlane(samplePoint), ROAD);
-    
+vec4 map(vec3 samplePoint) {    
     float sizeOfLine = step(0., samplePoint.x) * step(samplePoint.x, 0.7)  // getting white line
-        * step( mod(samplePoint.z + SPEED * u_time , 16.), 6.6); // getting offset
+    * step( mod(samplePoint.z + SPEED * u_time , 16.), 6.6); // getting offset
     
-    plane.yzw = mix(ROAD, vec3(1.0), sizeOfLine);
+    vec4 plane = vec4(sdPlane(samplePoint), mix(ROAD, vec3(1.0), sizeOfLine));
     
-    vec4 trees = createTrees(samplePoint);
 
-    if (samplePoint.x < -ROAD_WIDTH || samplePoint.x > ROAD_WIDTH ) {
+    float insideRoad = step(-ROAD_WIDTH, samplePoint.x) * step(samplePoint.x, ROAD_WIDTH) ;
+    vec4 trees = vec4(1.);
+    
+    if (insideRoad == 0.) {
+        trees = createTrees(samplePoint);
         plane.yzw = vec3(0.255,0.152,0.036);
-    } else {
-        trees.x = 1.;
     }
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
@@ -364,25 +360,21 @@ vec3 render(vec2 p, vec2 uv) {
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
-    vec3 color = vec3(1.0);
     vec4 scene = raymarsh(ro, rd, MIN_DIST, MAX_DIST);
-
-   color = scene.yzw;
-
-     vec3 point = ro + scene.x * rd;
+ 	vec3 point = ro + scene.x * rd;
      vec3 nor = getNormal(point);
 
 
     float shininess = 5.824;
 
     vec3 lightPosition =  vec3(-10.0, 20.0, 30.);
-    color *= phongIllumination(vec3(1.8), vec3(2.5), vec3(1.100,0.893,0.064), shininess, point ,  ro, lightPosition);
+    scene.yzw *= phongIllumination(vec3(1.8), vec3(2.5), vec3(1.100,0.893,0.064), shininess, point ,  ro, lightPosition);
     // color *= vec3(2.5);
     // color *= calcSoftshadow(p, vec3(0.3,3 , 1.));
     // color *= calcAO( p, nor );
 
     
-	return color;
+	return scene.yzw;
 }
 
 
