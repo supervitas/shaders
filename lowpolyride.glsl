@@ -123,7 +123,7 @@ vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
 
 vec4 tree4(vec3 p, float randValue, mat3 rotationLeaf) {
     float scale = 1.3 * randValue;
-	vec4 trunc = vec4(sdCappedCylinder(((rotateX(PI) * p + vec3(0., -1.5, 0))), vec2(0.4,4.0) * scale), TRUNK);
+	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -1.5, 0))), vec2(0.4,4.0) * scale), TRUNK);
 	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.690,0.411,0.121));
 	return unionSDF(trunc, leaf);
 }
@@ -138,7 +138,7 @@ vec3 pModXZ(vec3 p, const in vec3 size) {
 vec4 createTrees(vec3 samplePoint) {
     vec4 scene = vec4(1.);
     
-    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time  * SPEED), vec3(12.5, 0., 25. ));   
+    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
     vec3 tree2Repeat = vec3(tree1Repeat.x - 3.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
@@ -199,8 +199,7 @@ vec4 createCar(vec3 p) {
 }
 
 vec4 createFence(vec3 p) {
-    const vec3 pillarColor = vec3(0.165,0.158,0.165);
-
+    const vec3 pillarColor = vec3(0.248,0.288,0.335);
         
     vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColor);
 	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColor);
@@ -210,8 +209,8 @@ vec4 createFence(vec3 p) {
 
     float needsCut = step(mod(p.z + SPEED * u_time, SPEED), 0.5);
     
-    pillar.x = mix(1., pillar.x, needsCut);
-    pillarLeft.x = mix( 1., pillarLeft.x, needsCut);
+    pillar.x = mix(0.5, pillar.x, needsCut);
+    pillarLeft.x = mix(.5, pillarLeft.x, needsCut);
     
     vec4 fenceR = unionSDF(pillar, fence);
     vec4 fenceL = unionSDF(pillarLeft, fenceLeft);
