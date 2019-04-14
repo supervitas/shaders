@@ -224,9 +224,11 @@ vec4 createFence(vec3 p) {
 
 vec4 map(vec3 samplePoint) {
     vec4 plane = vec4(sdPlane(samplePoint), ROAD);
-    if (mod(samplePoint.z + SPEED * u_time , 16.) > 6.600 && samplePoint.x < 0. && samplePoint.x > -0.7) {
-        plane.yzw = vec3(1.0);
-    }
+    
+    float sizeOfLine = step(0., samplePoint.x) * step(samplePoint.x, 0.7)  // getting white line
+        * step( mod(samplePoint.z + SPEED * u_time , 16.), 6.6); // getting offset
+    
+    plane.yzw = mix(ROAD, vec3(1.0), sizeOfLine);
     
     vec4 trees = createTrees(samplePoint);
 
