@@ -103,28 +103,27 @@ float opSubtraction( float d1, float d2 ) { return max(-d1,d2); }
 
 vec4 tree1(vec3 p, float randValue,  mat3 rotationLeaf) {
   	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -.5, 0)) ) , vec2(0.15, 2.) * randValue) , TRUNK);
-  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.)) ) , 2.120  * randValue), vec3(0.915,0.191,0.094));           
+  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.)) ) , 2.120  * randValue), vec3(0.915,0.187,0.125));           
   	return unionSDF(trunc, leaf);
 }
 
 vec4 tree2(vec3 p, float randValue,  mat3 rotationLeaf) {
  	vec4 trunc = vec4(sdCappedCylinder(((p + vec3(0., -.5, 0)) ) , vec2(0.5,2.990) * randValue), TRUNK);
-	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.8, 1., 1.2) * randValue), vec3(0.500,0.482,0.171));
+	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.6, 1.2, 1.5) * randValue), vec3(0.014,0.250,0.175));
   	return unionSDF(trunc, leaf);
 }
 
 vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
  	float scale = 1.1 * randValue;
   	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,3.0) * scale), TRUNK);
-	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.5, 1.2) * scale ), vec3(0.500,0.414,0.075));
+	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.5, 1.2) * scale ), vec3(0.382,0.960,0.618));
 	return unionSDF(trunc, leaf);
 }
-
 
 vec4 tree4(vec3 p, float randValue, mat3 rotationLeaf) {
     float scale = 1.3 * randValue;
 	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -1.5, 0))), vec2(0.4,2.0) * scale), TRUNK);
-	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.690,0.411,0.121));
+	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.148,0.690,0.161));
 	return unionSDF(trunc, leaf);
 }
 
@@ -141,8 +140,8 @@ vec4 createTrees(vec3 samplePoint) {
     vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
-    vec3 tree3Repeat = vec3(tree1Repeat.x - .5, tree1Repeat.y, tree1Repeat.z + 11.5);
+    vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 7.5 );;
+    vec3 tree3Repeat = vec3(tree1Repeat.x - 1.5, tree1Repeat.y, tree1Repeat.z - 11.7);
     vec3 tree4Repeat = vec3(tree1Repeat.x - .3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
@@ -229,7 +228,7 @@ vec4 map(vec3 samplePoint) {
     
     if (insideRoad == 0.) {
         trees = createTrees(samplePoint);
-        plane.yzw = vec3(0.255,0.152,0.036);
+        plane.yzw = vec3(0.182,0.215,0.119);
     }
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
