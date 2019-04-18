@@ -115,7 +115,7 @@ vec4 tree2(vec3 p, float randValue,  mat3 rotationLeaf) {
 
 vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
  	float scale = 1.1 * randValue;
-  	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,3.0) * scale), TRUNK);
+  	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,2.0) * scale), TRUNK);
 	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.5, 1.2) * scale ), vec3(0.382,0.960,0.618));
 	return unionSDF(trunc, leaf);
 }
@@ -141,7 +141,7 @@ vec4 createTrees(vec3 samplePoint) {
 
     vec3 tree1Repeat = domainRepition;
     vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 7.5 );;
-    vec3 tree3Repeat = vec3(tree1Repeat.x - 1.5, tree1Repeat.y, tree1Repeat.z - 11.7);
+    vec3 tree3Repeat = vec3(tree1Repeat.x - .5, tree1Repeat.y, tree1Repeat.z - 11.7);
     vec3 tree4Repeat = vec3(tree1Repeat.x - .3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
@@ -198,7 +198,7 @@ vec4 createCar(vec3 p) {
 }
 
 vec4 createFence(vec3 p) {
-    const vec3 pillarColor = vec3(0.248,0.288,0.335);
+    const vec3 pillarColor = vec3(0.235,0.188,0.202);
         
     vec4 pillar = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -.5, 0), vec3(.15, 2., 100.)), pillarColor);
 	vec4 fence = vec4(sdBox(p + vec3(TREES_ROAD_OFFSET_RIGHT - 2., -2.5, 0), vec3(.25, 0.12, 100.)), pillarColor);
@@ -228,7 +228,7 @@ vec4 map(vec3 samplePoint) {
     
     if (insideRoad == 0.) {
         trees = createTrees(samplePoint);
-        plane.yzw = vec3(0.182,0.215,0.119);
+        plane.yzw = vec3(0.177,0.215,0.140);
     }
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
@@ -263,18 +263,6 @@ vec3 getNormal(vec3 p) {
         map(vec3(p.x, p.y + EPSILON, p.z)).x - map(vec3(p.x, p.y - EPSILON, p.z)).x,
         map(vec3(p.x, p.y, p.z  + EPSILON)).x - map(vec3(p.x, p.y, p.z - EPSILON)).x
     ));
-}
-
-float calcSoftshadow(in vec3 ro, in vec3 rd) {
-	float res = 1.0;
-    float t = 0.01;
-    for( int i=0; i<256; i++ ) {
-		float h = map( ro + rd*t ).x;
-        res = min( res, smoothstep(0.0,1.0,18.0*h/t) );
-        t += clamp( h, 0.005, 0.02 );
-        if( res < .5 || t > 0.3 ) break;
-    }
-    return clamp( res, 0.0, 1.0 );
 }
 
 vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
@@ -315,22 +303,10 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
   return mat3(uu, vv, ww);
 }
 
-float calcAO( vec3 pos, vec3 nor ) {
-	float occ = 0.0;
-    float sca = 1.0;
-    for(int i=0; i < 5; i++ ) {
-        float hr = 0.01 + 0.12*float(i)/4.0;
-        vec3 aopos =  nor * hr + pos;
-        float dd = map( aopos ).x;
-        occ += -(dd-hr)*sca;
-        sca *= 0.95;
-    }
-    return clamp( 1.0 - 3.0*occ, 0.0, 1.0 );    
-}
 
 vec3 render(vec2 p, vec2 uv) {
-    vec3 ro = vec3(6., 22., -13.6);
-     // vec3 ro = mix(vec3(4., 21., -11.6), vec3(6., 22., -13.6), sin(u_time ));
+    // vec3 ro = vec3(8., 25., -13.6);
+     vec3 ro = mix(vec3(8., 24., -13.6), vec3(5.5, 22., -13.6), sin(u_time * 0.25 ));
     
     vec3 ta =  normalize(vec3(0.320,0.500,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
