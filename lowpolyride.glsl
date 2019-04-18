@@ -123,7 +123,7 @@ vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
 
 vec4 tree4(vec3 p, float randValue, mat3 rotationLeaf) {
     float scale = 1.3 * randValue;
-	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -1.5, 0))), vec2(0.4,4.0) * scale), TRUNK);
+	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -1.5, 0))), vec2(0.4,2.0) * scale), TRUNK);
 	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.690,0.411,0.121));
 	return unionSDF(trunc, leaf);
 }
@@ -141,9 +141,9 @@ vec4 createTrees(vec3 samplePoint) {
     vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x - 3.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
-    vec3 tree3Repeat = vec3(tree1Repeat.x - 2.5, tree1Repeat.y, tree1Repeat.z + 11.5);
-    vec3 tree4Repeat = vec3(tree1Repeat.x - 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
+    vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 5.5 );;
+    vec3 tree3Repeat = vec3(tree1Repeat.x - .5, tree1Repeat.y, tree1Repeat.z + 11.5);
+    vec3 tree4Repeat = vec3(tree1Repeat.x - .3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
     mat3 rotationLeaf = rotateY(PI * scaleDistance);
