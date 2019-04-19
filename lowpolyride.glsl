@@ -270,14 +270,17 @@ vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
 }
 
 vec3 phongIllumination(vec3 p, vec3 dir) { 
+    float dayCycle = fract(-u_time * 0.25);
+    
     vec3 Ks = vec3(0.425,0.425,0.425);
     vec3 Kd = vec3(5.5);
   	vec3 n = getNormal(p);
     	
 	vec3 ref = reflect( dir, n );
 
-    vec3 light_pos  = vec3( 100.0, 200.0, 40.040 );
-	vec3 light_color = vec3(0.995,0.900,0.872);
+    vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , 40.040 ), dayCycle);
+    vec3 lightPosNight  = vec3(-100.0, 20.0 , 40.040 );
+	vec3 light_color = mix(vec3(0.285,0.172,0.142), vec3(0.995,0.900,0.872), dayCycle);
     const float shininess = 1.6;
 	
 	vec3 vl = normalize( light_pos - p );
@@ -288,7 +291,7 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
     vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
 	specular = pow( specular, vec3( shininess ) );
 		
-	vec3 color = light_color * mix( diffuse, specular, F ) + light_color; 
+	vec3 color = light_color * mix( diffuse, specular, F ) + vec3(0.405,0.366,0.355); 
       
     return color;
 }
@@ -305,8 +308,7 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 
 
 vec3 render(vec2 p, vec2 uv) {
-    // vec3 ro = vec3(8., 25., -13.6);
-     vec3 ro = mix(vec3(8., 24., -13.6), vec3(5.5, 22., -13.6), sin(u_time * 0.25 ));
+    vec3 ro = mix(vec3(7., 23.5, -13.), vec3(5.8, 19.3, -13.), sin(u_time * 0.5 ));
     
     vec3 ta =  normalize(vec3(0.320,0.500,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
@@ -318,9 +320,6 @@ vec3 render(vec2 p, vec2 uv) {
 
 
     scene.yzw *= phongIllumination(point, rd);
-    // scene.yzw *= vec3(1.5);
-    // scene.yzw *= calcSoftshadow(point, ro);
-    // scene.yzw *= calcAO( point, nor );
     
 	return scene.yzw;
 }
