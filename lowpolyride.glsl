@@ -9,7 +9,7 @@ precision highp float;
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
 #define MAX_DIST  150. // far
-#define EPSILON 0.001
+#define EPSILON 0.01
 #define PI 3.1415926535
 
 #define TRUNK vec3(0.175,0.050,0.005)
@@ -57,7 +57,7 @@ mat3 rotateZ(float theta) {
 
 float sdBox( vec3 p, vec3 b ) {
   vec3 d = abs(p) - b;
-  return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0); // remove this line for an only partially signed sdf 
+  return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0);
 }
 
 float piramidSDF(vec3 p, vec3 size) {
@@ -149,6 +149,7 @@ vec4 createTrees(vec3 samplePoint) {
     vec4 tree2 = tree2(tree2Repeat, scaleDistance, rotationLeaf);
     vec4 tree3 = tree3(tree3Repeat, scaleDistance, rotationLeaf);
     vec4 tree4 = tree4(tree4Repeat, scaleDistance, rotationLeaf);
+    
 
     vec4 trees1 = unionSDF(tree1, tree2);
     vec4 trees2 = unionSDF(tree3, tree4);
@@ -250,7 +251,7 @@ vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
 }
 
 vec3 phongIllumination(vec3 p, vec3 dir) { 
-    float dayCycle = 1.; // fract(-u_time * 0.25);
+    float dayCycle =  max(fract(u_time * 0.05), 0.) * 2. - 1.;
     
     vec3 Ks = vec3(0.425,0.425,0.425);
     vec3 Kd = vec3(5.5);
@@ -258,9 +259,9 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
     	
 	vec3 ref = reflect( dir, n );
 
-    vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , 40.040 ), dayCycle);
-    vec3 lightPosNight  = vec3(-100.0, 20.0 , 40.040 );
-	vec3 light_color = mix(vec3(0.285,0.172,0.142), vec3(0.995,0.900,0.872), dayCycle);
+    vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , 40.040 ), 1. - abs(dayCycle));
+    vec3 lightPosNight = vec3(-100.0, 20.0 , 40.040 );
+	vec3 light_color = mix(vec3(0.285,0.172,0.142), vec3(0.995,0.900,0.872), 1. - abs(dayCycle));
     const float shininess = 1.6;
 	
 	vec3 vl = normalize( light_pos - p );
