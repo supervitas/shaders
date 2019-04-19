@@ -135,8 +135,6 @@ vec3 pModXZ(vec3 p, const in vec3 size) {
 }
 
 vec4 createTrees(vec3 samplePoint) {
-    vec4 scene = vec4(1.);
-    
     vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
@@ -152,12 +150,10 @@ vec4 createTrees(vec3 samplePoint) {
     vec4 tree3 = tree3(tree3Repeat, scaleDistance, rotationLeaf);
     vec4 tree4 = tree4(tree4Repeat, scaleDistance, rotationLeaf);
 
-    scene = unionSDF(scene, tree1);
-    scene = unionSDF(scene, tree2);
-    scene = unionSDF(scene, tree3);
-    scene = unionSDF(scene, tree4);
+    vec4 trees1 = unionSDF(tree1, tree2);
+    vec4 trees2 = unionSDF(tree3, tree4);
 
-    return scene;
+    return unionSDF(trees1, trees2);
 }
 
 
@@ -173,8 +169,7 @@ vec4 createCar(vec3 p) {
     
     vec4 windowBack =  vec4(sdBox(p + vec3(0., -3. - jumping, 2.3), vec3(1.3, .43, 0.01)) - 0.21, CAR_WINDOW);
     vec4 windowLeft =  vec4(sdBox(rotateY(-1.548) * p + vec3(0., -3. - jumping, 1.8), vec3(1.3, .43, 0.01)) - 0.3, CAR_WINDOW);
-    car = unionSDF(car, windowBack);
-    car = unionSDF(car, windowLeft);
+    car = unionSDF(car, unionSDF(windowLeft, windowBack));
 
     vec3 t = rotateZ(1.564) * p;
    
@@ -187,14 +182,7 @@ vec4 createCar(vec3 p) {
     vec4 wheelWhite = vec4(sdCappedCylinder(wheelBackPosition, vec2(.4, 2.1)), vec3(1.));
     vec4 wheelWhite2 = vec4(sdCappedCylinder(wheelFrontPosition, vec2(.4, 2.2)), vec3(1.));
 
-    
-    car = unionSDF(car, wheel);
-    car = unionSDF(car, wheel2);
-    
-    car = unionSDF(car, wheelWhite);
-    car = unionSDF(car, wheelWhite2);
-
-    return car;
+    return unionSDF(unionSDF(car, unionSDF(wheelWhite, unionSDF(wheel, wheel2))), unionSDF(car, unionSDF(wheelWhite, wheelWhite2)));
 }
 
 vec4 createFence(vec3 p) {
@@ -211,10 +199,7 @@ vec4 createFence(vec3 p) {
     pillar.x = mix(0.5, pillar.x, needsCut);
     pillarLeft.x = mix(.5, pillarLeft.x, needsCut);
     
-    vec4 fenceR = unionSDF(pillar, fence);
-    vec4 fenceL = unionSDF(pillarLeft, fenceLeft);
-    
-    return unionSDF(fenceL, fenceR);
+    return unionSDF(unionSDF(pillar, fence), unionSDF(pillarLeft, fenceLeft));
 }
 
 vec4 map(vec3 samplePoint) {    
@@ -222,7 +207,6 @@ vec4 map(vec3 samplePoint) {
     * step( mod(samplePoint.z + SPEED * u_time , 16.), 6.6); // getting offset
     
     vec4 plane = vec4(sdPlane(samplePoint), mix(ROAD, vec3(1.0), sizeOfLine));
-
     float insideRoad = step(-ROAD_WIDTH, samplePoint.x) * step(samplePoint.x, ROAD_WIDTH) ;
     vec4 trees = vec4(1.);
     
@@ -233,12 +217,8 @@ vec4 map(vec3 samplePoint) {
 
     vec4 car = createCar(samplePoint + vec3(6., -1.5, -2.5));
     vec4 fence = createFence(samplePoint);
-    
-    vec4 scene = unionSDF(car, plane);
-    scene = unionSDF(scene, fence);
-    scene = unionSDF(scene, trees);
-    
-    return scene;
+        
+    return unionSDF(unionSDF(fence, trees), unionSDF(car, plane));
 }
 
 vec4 raymarsh(vec3 eye, vec3 marchingDirection, float start, float end) {
@@ -270,7 +250,7 @@ vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
 }
 
 vec3 phongIllumination(vec3 p, vec3 dir) { 
-    float dayCycle = fract(-u_time * 0.25);
+    float dayCycle = 1.; // fract(-u_time * 0.25);
     
     vec3 Ks = vec3(0.425,0.425,0.425);
     vec3 Kd = vec3(5.5);
@@ -295,7 +275,7 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
       
     return color;
 }
-            
+
 
 mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
   vec3 rr = vec3(sin(roll), cos(roll), 0.0);
@@ -305,7 +285,6 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 
   return mat3(uu, vv, ww);
 }
-
 
 vec3 render(vec2 p, vec2 uv) {
     vec3 ro = mix(vec3(7., 23.5, -13.), vec3(5.8, 19.3, -13.), sin(u_time * 0.5 ));
@@ -318,10 +297,7 @@ vec3 render(vec2 p, vec2 uv) {
  	vec3 point = ro + scene.x * rd;
     vec3 nor = getNormal(point);
 
-
-    scene.yzw *= phongIllumination(point, rd);
-    
-	return scene.yzw;
+	return scene.yzw *= phongIllumination(point, rd);
 }
 
 
