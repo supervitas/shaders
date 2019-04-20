@@ -1,6 +1,5 @@
 // Author: supervitas
 
-
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -8,7 +7,7 @@ precision highp float;
 #define AA 1
 #define MAX_MARCHING_STEPS 255
 #define MIN_DIST 0.0 // near
-#define MAX_DIST  150. // far
+#define MAX_DIST  250. // far
 #define EPSILON 0.01
 #define PI 3.1415926535
 
@@ -20,9 +19,13 @@ precision highp float;
 #define TREES_ROAD_OFFSET_RIGHT ROAD_WIDTH + 2.
 #define SPEED 26.
 
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
+
 uniform float u_time;
+
+#define u_time iTime
+#define u_resolution iResolution
+
+
 
 mat3 rotateX(float theta) {
     float c = cos(theta);
@@ -133,7 +136,7 @@ vec4 createTrees(vec3 samplePoint) {
     vec3 domainRepition = pModXZ(vec3(samplePoint.x , samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(8.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x + 1.1 , tree1Repeat.y, tree1Repeat.z + 7.5 );;
+    vec3 tree2Repeat = vec3(tree1Repeat.x - .1 , tree1Repeat.y, tree1Repeat.z + 7.5 );;
     vec3 tree3Repeat = vec3(tree1Repeat.x - 1.7, tree1Repeat.y, tree1Repeat.z - 11.7);
     vec3 tree4Repeat = vec3(tree1Repeat.x + 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
@@ -158,7 +161,7 @@ vec4 createCar(vec3 p) {
     car.x = opSubtraction(subFront, car.x);
     car.x = opSubtraction(subBack, car.x);
     
-    vec4 windowBack =  vec4(sdBox(p + vec3(0., -3. - jumping, 2.3), vec3(1.3, .43, 0.01)) - 0.21, CAR_WINDOW);
+    vec4 windowBack =  vec4(sdBox(p + vec3(0., -3. - jumping, 2.15), vec3(1.3, .43, 0.01)) - 0.21, CAR_WINDOW);
     vec4 windowLeft =  vec4(sdBox(rotateY(-1.548) * p + vec3(0., -3. - jumping, 1.8), vec3(1.3, .43, 0.01)) - 0.3, CAR_WINDOW);
     car = unionSDF(car, unionSDF(windowLeft, windowBack));
 
@@ -241,7 +244,7 @@ vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
 }
 
 vec3 phongIllumination(vec3 p, vec3 dir) { 
-    float dayCycle =  max(fract(u_time * 0.05), 0.) * 2. - 1.;
+    float dayCycle =  max(fract(u_time * 0.05 + .5), 0.) * 2. - 1.;
     
     vec3 Ks = vec3(0.425,0.425,0.425);
     vec3 Kd = vec3(5.5);
@@ -274,9 +277,11 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-    vec3 ro = mix(vec3(7., 23.5, -13.), vec3(5.8, 19.3, -13.), sin(u_time * 0.5 ));
+    vec3 ro = mix(vec3(2.5, 15.5, -8.5), vec3(0.5, 14.5, -9.5), sin(u_time * 0.25));
     
-    vec3 ta = normalize(vec3(0.320,0.500,-1.000));
+    ro.xy += mix(vec2(1.5), vec2(2.5), iMouse.xy * 0.01);
+    
+    vec3 ta = normalize(vec3(-1.,-1.,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
@@ -287,23 +292,24 @@ vec3 render(vec2 p, vec2 uv) {
 	return scene.yzw *= phongIllumination(point, rd);
 }
 
-void main() {
-     vec2 uv = gl_FragCoord.xy / u_resolution;
+void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
+    vec2 uv = fragCoord.xy / u_resolution.xy;
 #if AA>1
     vec3 color = vec3(0.0);
     for( int m=0; m<AA; m++ )
     for( int n=0; n<AA; n++ ) {
-        vec2 px = gl_FragCoord.xy + vec2(float(m),float(n)) / float(AA);
+        vec2 px = fragCoord + vec2(float(m),float(n)) / float(AA);
         vec2 p = (-u_resolution.xy+2.0*px) / u_resolution.y;
     	color += render( p, uv );    
     }
     color /= float(AA*AA);
 #else
- 	vec2 p = (-u_resolution.xy + 2.0*gl_FragCoord.xy) / u_resolution.y;
+ 	vec2 p = (-u_resolution.xy + 2.0*fragCoord) / u_resolution.y;
     vec3 color = render(p, uv);
 #endif 
  
-    color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
+   	color *= 0.25+0.334*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.3 ); // Vigneting
     color = smoothstep(0., .7, color);
-    gl_FragColor = vec4(color, 1.0);
+    
+    fragColor = vec4(color, 1.0);
 }
