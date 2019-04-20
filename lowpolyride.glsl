@@ -54,7 +54,6 @@ mat3 rotateZ(float theta) {
     );
 }
 
-
 float sdBox( vec3 p, vec3 b ) {
   vec3 d = abs(p) - b;
   return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0);
@@ -103,20 +102,20 @@ float opSubtraction( float d1, float d2 ) { return max(-d1,d2); }
 
 vec4 tree1(vec3 p, float randValue,  mat3 rotationLeaf) {
   	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -.5, 0)) ) , vec2(0.15, 2.) * randValue) , TRUNK);
-  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -3. * randValue, 0.)) ) , 2.120  * randValue), vec3(0.915,0.187,0.125));           
+  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -4.5 * randValue, 0.)) ) , 3.120  * randValue ), vec3(0.906,0.975,0.281));           
   	return unionSDF(trunc, leaf);
 }
 
 vec4 tree2(vec3 p, float randValue,  mat3 rotationLeaf) {
  	vec4 trunc = vec4(sdCappedCylinder(((p + vec3(0., -.5, 0)) ) , vec2(0.5,2.990) * randValue), TRUNK);
-	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.6, 1.2, 1.5) * randValue), vec3(0.014,0.250,0.175));
+	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.6, 1.2, 1.5) * randValue), vec3(0.201,0.355,0.108));
   	return unionSDF(trunc, leaf);
 }
 
 vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
  	float scale = 1.1 * randValue;
   	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,2.0) * scale), TRUNK);
-	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.5, 1.2) * scale ), vec3(0.382,0.960,0.618));
+	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.8, 1.3) * scale ), vec3(0.960,0.625,0.249));
 	return unionSDF(trunc, leaf);
 }
 
@@ -127,7 +126,6 @@ vec4 tree4(vec3 p, float randValue, mat3 rotationLeaf) {
 	return unionSDF(trunc, leaf);
 }
 
-
 vec3 pModXZ(vec3 p, const in vec3 size) {
   p.x = mod(p.x + size.x * 0.5, size.x) - size.x * 0.5;
   p.z = mod(p.z + size.z * 0.5, size.z) - size.z * 0.5;
@@ -135,12 +133,12 @@ vec3 pModXZ(vec3 p, const in vec3 size) {
 }
 
 vec4 createTrees(vec3 samplePoint) {
-    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 2.5, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
+    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 3.4, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x - 1.5 , tree1Repeat.y, tree1Repeat.z + 7.5 );;
-    vec3 tree3Repeat = vec3(tree1Repeat.x - .5, tree1Repeat.y, tree1Repeat.z - 11.7);
-    vec3 tree4Repeat = vec3(tree1Repeat.x - .3, tree1Repeat.y, tree1Repeat.z - 6.5);
+    vec3 tree2Repeat = vec3(tree1Repeat.x - 2.5, tree1Repeat.y, tree1Repeat.z + 7.5 );;
+    vec3 tree3Repeat = vec3(tree1Repeat.x - .7, tree1Repeat.y, tree1Repeat.z - 11.7);
+    vec3 tree4Repeat = vec3(tree1Repeat.x + .3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
     mat3 rotationLeaf = rotateY(PI * scaleDistance);
@@ -156,7 +154,6 @@ vec4 createTrees(vec3 samplePoint) {
 
     return unionSDF(trees1, trees2);
 }
-
 
 vec4 createCar(vec3 p) {
     float jumping = mix(0., .3, sin(u_time * 5.));
@@ -259,10 +256,9 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
     	
 	vec3 ref = reflect( dir, n );
 
-    vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , 40.040 ), 1. - abs(dayCycle));
+    vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , -40.040 ), 1. - abs(dayCycle));
     vec3 lightPosNight = vec3(-100.0, 20.0 , 40.040 );
 	vec3 light_color = mix(vec3(0.285,0.172,0.142), vec3(0.995,0.900,0.872), 1. - abs(dayCycle));
-    const float shininess = 1.6;
 	
 	vec3 vl = normalize( light_pos - p );
 	
@@ -270,13 +266,12 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
 	vec3 specular = vec3( max( 0.0, dot( vl, ref ) ) );
 		
     vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
-	specular = pow( specular, vec3( shininess ) );
+	specular = pow( specular, vec3( 1.6 ) );
 		
 	vec3 color = light_color * mix( diffuse, specular, F ) + vec3(0.405,0.366,0.355); 
       
     return color;
 }
-
 
 mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
   vec3 rr = vec3(sin(roll), cos(roll), 0.0);
@@ -300,7 +295,6 @@ vec3 render(vec2 p, vec2 uv) {
 
 	return scene.yzw *= phongIllumination(point, rd);
 }
-
 
 void main() {
      vec2 uv = gl_FragCoord.xy / u_resolution;
