@@ -102,7 +102,7 @@ float opSubtraction( float d1, float d2 ) { return max(-d1,d2); }
 
 vec4 tree1(vec3 p, float randValue,  mat3 rotationLeaf) {
   	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -.5, 0)) ) , vec2(0.15, 2.) * randValue) , TRUNK);
-  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -4.5 * randValue, 0.)) ) , 3.120  * randValue ), vec3(0.906,0.975,0.281));           
+  	vec4 leaf = vec4(sdOctahedron(((rotationLeaf * p + vec3(0., -4.5 * randValue, 0.)) ) , 3.120  * randValue ), vec3(0.129,0.420,0.207));           
   	return unionSDF(trunc, leaf);
 }
 
@@ -115,7 +115,7 @@ vec4 tree2(vec3 p, float randValue,  mat3 rotationLeaf) {
 vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
  	float scale = 1.1 * randValue;
   	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,2.0) * scale), TRUNK);
-	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.))), vec2(1.8, 1.3) * scale ), vec3(0.960,0.625,0.249));
+	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.5))), vec2(1.8, 1.5) * scale ), vec3(0.187,0.365,0.274));
 	return unionSDF(trunc, leaf);
 }
 
@@ -133,12 +133,12 @@ vec3 pModXZ(vec3 p, const in vec3 size) {
 }
 
 vec4 createTrees(vec3 samplePoint) {
-    vec3 domainRepition = pModXZ(vec3(samplePoint.x - 3.4, samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(12.5, 0., 25. ));   
+    vec3 domainRepition = pModXZ(vec3(samplePoint.x , samplePoint.y - 2.5, samplePoint.z + u_time * SPEED), vec3(8.5, 0., 25. ));   
 
     vec3 tree1Repeat = domainRepition;
-    vec3 tree2Repeat = vec3(tree1Repeat.x - 2.5, tree1Repeat.y, tree1Repeat.z + 7.5 );;
-    vec3 tree3Repeat = vec3(tree1Repeat.x - .7, tree1Repeat.y, tree1Repeat.z - 11.7);
-    vec3 tree4Repeat = vec3(tree1Repeat.x + .3, tree1Repeat.y, tree1Repeat.z - 6.5);
+    vec3 tree2Repeat = vec3(tree1Repeat.x + 1.1 , tree1Repeat.y, tree1Repeat.z + 7.5 );;
+    vec3 tree3Repeat = vec3(tree1Repeat.x - 1.7, tree1Repeat.y, tree1Repeat.z - 11.7);
+    vec3 tree4Repeat = vec3(tree1Repeat.x + 1.3, tree1Repeat.y, tree1Repeat.z - 6.5);
     
     float scaleDistance = min(1., (1.2 + -samplePoint.z * 0.02));
     mat3 rotationLeaf = rotateY(PI * scaleDistance);
@@ -248,7 +248,7 @@ vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
 }
 
 vec3 phongIllumination(vec3 p, vec3 dir) { 
-    float dayCycle =  max(fract(u_time * 0.05), 0.) * 2. - 1.;
+    float dayCycle = 0.; max(fract(u_time * 0.05), 0.) * 2. - 1.;
     
     vec3 Ks = vec3(0.425,0.425,0.425);
     vec3 Kd = vec3(5.5);
@@ -285,7 +285,7 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 vec3 render(vec2 p, vec2 uv) {
     vec3 ro = mix(vec3(7., 23.5, -13.), vec3(5.8, 19.3, -13.), sin(u_time * 0.5 ));
     
-    vec3 ta =  normalize(vec3(0.320,0.500,-1.000));
+    vec3 ta = normalize(vec3(0.320,0.500,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
