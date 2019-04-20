@@ -108,21 +108,21 @@ vec4 tree1(vec3 p, float randValue,  mat3 rotationLeaf) {
 
 vec4 tree2(vec3 p, float randValue,  mat3 rotationLeaf) {
  	vec4 trunc = vec4(sdCappedCylinder(((p + vec3(0., -.5, 0)) ) , vec2(0.5,2.990) * randValue), TRUNK);
-	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.6, 1.2, 1.5) * randValue), vec3(0.201,0.355,0.108));
+	vec4 leaf = vec4(piramidSDF(rotationLeaf * p + vec3(0, -3.5 * randValue, 0.), vec3(1.6, 1.2, 1.5) * randValue), vec3(0.197,0.270,0.216));
   	return unionSDF(trunc, leaf);
 }
 
 vec4 tree3(vec3 p, float randValue, mat3 rotationLeaf) {
  	float scale = 1.1 * randValue;
   	vec4 trunc = vec4(sdCappedCylinder((((p + vec3(0., -1.5, 0)) ) ) , vec2(0.2,2.0) * scale), TRUNK);
-	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.5))), vec2(1.8, 1.5) * scale ), vec3(0.187,0.365,0.274));
+	vec4 leaf = vec4(sdHexPrism(((rotationLeaf * p + vec3(0, -3.8 * scale, 0.5))), vec2(1.8, 1.5) * scale ), vec3(0.357,0.365,0.087));
 	return unionSDF(trunc, leaf);
 }
 
 vec4 tree4(vec3 p, float randValue, mat3 rotationLeaf) {
     float scale = 1.3 * randValue;
 	vec4 trunc = vec4(sdCappedCylinder((( p + vec3(0., -1.5, 0))), vec2(0.4,2.0) * scale), TRUNK);
-	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.148,0.690,0.161));
+	vec4 leaf = vec4(sdBox(((rotationLeaf  *  p + vec3(0., -4. *scale, 0.)) ) , vec3(1.5) * scale), vec3(0.690,0.402,0.247));
 	return unionSDF(trunc, leaf);
 }
 
@@ -248,7 +248,7 @@ vec3 fresnel( vec3 F0, vec3 h, vec3 l ) {
 }
 
 vec3 phongIllumination(vec3 p, vec3 dir) { 
-    float dayCycle = 0.; max(fract(u_time * 0.05), 0.) * 2. - 1.;
+    float dayCycle =  max(fract(u_time * 0.05), 0.) * 2. - 1.;
     
     vec3 Ks = vec3(0.425,0.425,0.425);
     vec3 Kd = vec3(5.5);
@@ -258,7 +258,7 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
 
     vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , -40.040 ), 1. - abs(dayCycle));
     vec3 lightPosNight = vec3(-100.0, 20.0 , 40.040 );
-	vec3 light_color = mix(vec3(0.285,0.172,0.142), vec3(0.995,0.900,0.872), 1. - abs(dayCycle));
+	vec3 light_color = mix(vec3(0.285,0.099,0.072), vec3(0.995,0.900,0.872), 1. - abs(dayCycle));
 	
 	vec3 vl = normalize( light_pos - p );
 	
@@ -268,9 +268,8 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
     vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
 	specular = pow( specular, vec3( 1.6 ) );
 		
-	vec3 color = light_color * mix( diffuse, specular, F ) + vec3(0.405,0.366,0.355); 
       
-    return color;
+    return light_color * mix( diffuse, specular, F ) + vec3(0.405,0.366,0.355);
 }
 
 mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
