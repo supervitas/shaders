@@ -252,19 +252,19 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
     	
 	vec3 ref = reflect( dir, n );
 
-    vec3 light_pos  = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , -40.040 ), 1. - abs(dayCycle));
+    vec3 light_pos = mix( vec3(-100.0, 20.0 , 40.040 ), vec3(100.0, 200.0 , -40.040 ), 1. - abs(dayCycle));
     vec3 lightPosNight = vec3(-100.0, 20.0 , 40.040 );
 	vec3 light_color = mix(vec3(0.285,0.099,0.072), vec3(0.995,0.900,0.872), 1. - abs(dayCycle));
 	
-	vec3 vl = normalize( light_pos - p );
+	vec3 vl = normalize(light_pos - p);
 	
-	vec3 diffuse  = Kd * vec3( max( 0.0, dot( vl, n ) ) );
-	vec3 specular = vec3( max( 0.0, dot( vl, ref ) ) );
+	vec3 diffuse  = Kd * vec3(max(0.0, dot( vl, n )));
+	vec3 specular = vec3(max(0.0, dot(vl, ref)));
 		
-    vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
-	specular = pow( specular, vec3( 1.6 ) );
+    vec3 F = fresnel(Ks, normalize(vl - dir ), vl);
+	specular = pow(specular, vec3( 1.6 ) );
       
-    return light_color * mix( diffuse, specular, F ) + vec3(0.405,0.366,0.355);
+    return light_color * mix( diffuse, specular, F ) + light_color;
 }
 
 mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
@@ -277,9 +277,7 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 }
 
 vec3 render(vec2 p, vec2 uv) {
-    vec3 ro = mix(vec3(2.5, 15.5, -8.5), vec3(0.5, 14.5, -9.5), sin(u_time * 0.25));
-    
-    ro.xy += mix(vec2(1.5), vec2(2.5), iMouse.xy * 0.01);
+    vec3 ro = mix(vec3(5.5, 22.5, -8.5), vec3(5.5, 20.5, -9.5), sin(u_time * 0.25));
     
     vec3 ta = normalize(vec3(-1.,-1.,-1.000));
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
