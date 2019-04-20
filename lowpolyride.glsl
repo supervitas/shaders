@@ -85,10 +85,7 @@ float sdHexPrism( vec3 p, vec2 h ) {
     return min(max(d.x,d.y), 0.0) + length(max(d, 0.0));
 }
 
-float sdPlane( vec3 p ) {
-	return p.y;
-}
-
+float sdPlane( vec3 p ) {return p.y;}
 float sdTorus( vec3 p, vec2 t ) {
   vec2 q = vec2(length(p.xz)-t.x,p.y);
   return length(q)-t.y;
@@ -147,12 +144,8 @@ vec4 createTrees(vec3 samplePoint) {
     vec4 tree2 = tree2(tree2Repeat, scaleDistance, rotationLeaf);
     vec4 tree3 = tree3(tree3Repeat, scaleDistance, rotationLeaf);
     vec4 tree4 = tree4(tree4Repeat, scaleDistance, rotationLeaf);
-    
 
-    vec4 trees1 = unionSDF(tree1, tree2);
-    vec4 trees2 = unionSDF(tree3, tree4);
-
-    return unionSDF(trees1, trees2);
+    return unionSDF(unionSDF(tree1, tree2), unionSDF(tree3, tree4));
 }
 
 vec4 createCar(vec3 p) {
@@ -267,7 +260,6 @@ vec3 phongIllumination(vec3 p, vec3 dir) {
 		
     vec3 F = fresnel( Ks, normalize( vl - dir ), vl );
 	specular = pow( specular, vec3( 1.6 ) );
-		
       
     return light_color * mix( diffuse, specular, F ) + vec3(0.405,0.366,0.355);
 }
