@@ -42,22 +42,16 @@ vec3 noise(vec2 p) {
 }
 
 
-float fbmL(vec2 p) {
-  vec2 df = vec2(0.0);
-  float f = 0.0;
-  float w = 0.5;
+mat2 sea = mat2(0.124,0.092,0.208,0.260);
 
-  for (int i = 0; i < 2; i++) {
-    vec3 n = noise(p);
-    df += n.yz;
-    f += abs(w * n.x / (1.0 + dot(df, df)));
-    w *= 0.5;
-    p = 2. * 0.1 * p;
-  }
+float fbmL(vec2 p) {
+  float w = 0.225;
+  vec3 n = noise(p);
+  vec2 df = n.yz;
+  float f = abs(w * n.x / (1.0 + dot(df, df)));
+    
   return f;
 }
-
-
 
 float map(vec3 p) {
     float scene = p.y;
@@ -131,11 +125,11 @@ void setColor(vec3 p, vec3 n, out vec3 color) {
 }
 
 float getSun(vec2 uv) {
-      vec2 dist = uv -vec2(0.640,0.750);
+    vec2 dist = uv -vec2(0.640,0.750);
     const float radius = 0.02;
-    float isCircle = 1.-smoothstep(radius-(radius*0.01),
-                         radius+(radius*0.01),
-                         dot(dist,dist)*4.0);
+    float isCircle = 1.-smoothstep(radius-(radius*0.6),
+                         radius+(radius*0.),
+                         dot(dist,dist)*4.5);
     
 	return isCircle;
 }
@@ -143,7 +137,7 @@ float getSun(vec2 uv) {
 void setSkyColor(vec2 uv, out vec3 color, vec3 dir) {
    color = mix(vec3(0.040,0.057,0.095), vec3(0.440,0.830,0.822), uv.y);
    float sun = getSun(uv);
-   color = mix(color, vec3(0.965,0.807,0.096), sun);
+   color = mix(color, vec3(0.965,0.575,0.169), sun);
 }
 
 void main() {
