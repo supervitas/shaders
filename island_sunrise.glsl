@@ -1,5 +1,4 @@
-// Author @patriciogv - 2015
-// http://patriciogonzalezvivo.com
+// Author: supervitas
 
 #ifdef GL_ES
 precision mediump float;
@@ -9,8 +8,6 @@ precision mediump float;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
-
-// Author: supervitas
 
 #define MAX_MARCHING_STEPS 256
 #define MAX_DIST 25. // far
@@ -60,7 +57,7 @@ vec4 map(vec3 p) {
     // vec3 nor = normal(point, scene);
     
     scene.x -= h;
-     scene.yzw = vec3(0.184,0.342,0.460);
+    scene.yzw = mix(vec3(0.094,0.372,0.440), vec3(1.0), h);
 
   	return scene;
 }
