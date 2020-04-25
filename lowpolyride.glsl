@@ -6,7 +6,6 @@ precision highp float;
 
 #define AA 1
 #define MAX_MARCHING_STEPS 255
-#define MIN_DIST 0.0 // near
 #define MAX_DIST  250. // far
 #define EPSILON 0.01
 #define PI 3.1415926535
@@ -215,22 +214,22 @@ vec4 map(vec3 samplePoint) {
     return unionSDF(unionSDF(fence, trees), unionSDF(car, plane));
 }
 
-vec4 raymarsh(vec3 eye, vec3 marchingDirection, float start, float end) {
-    float depth = start;
+vec4 raymarsh(vec3 eye, vec3 marchingDirection) {
+    float depth = 0.0;
+
     for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
         vec4 dist = map(eye + depth * marchingDirection);
         if (dist.x < EPSILON) {
 			return vec4(depth, dist.yzw);
         }
         depth += dist.x;
-        if (depth >= end) {
-            return vec4(end);
+        if (depth >= MAX_DIST) {
+            return vec4(-1, vec3(0.0));
         }
     }
 
-    return vec4(end);
+    return vec4(-1, vec3(0.0));
 }
-
 vec3 getNormal(vec3 p) {
     return normalize(vec3(
         map(vec3(p.x + EPSILON, p.y, p.z)).x - map(vec3(p.x - EPSILON, p.y, p.z)).x,
@@ -283,7 +282,7 @@ vec3 render(vec2 p, vec2 uv) {
     mat3 ca = calcLookAtMatrix(ro, ta, 0.0);
     vec3 rd = ca * normalize(vec3(p.xy, 1.2));
     
-    vec4 scene = raymarsh(ro, rd, MIN_DIST, MAX_DIST);
+    vec4 scene = raymarsh(ro, rd);
  	vec3 point = ro + scene.x * rd;
     vec3 nor = getNormal(point);
 
