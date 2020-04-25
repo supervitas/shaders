@@ -5,6 +5,7 @@
 precision mediump float;
 #endif
 
+
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
@@ -42,38 +43,43 @@ vec3 noise(vec2 p) {
 }
 
 
-mat2 sea = mat2(0.124,0.092,0.208,0.260);
-
 float fbmL(vec2 p) {
-  float w = 0.225;
-  vec3 n = noise(p);
-  vec2 df = n.yz;
-  float f = abs(w * n.x / (1.0 + dot(df, df)));
-    
-  return f;
+    vec3 n = noise(p);
+    vec2 df = n.yz;
+    float f = abs(0.5 * n.x / (2.8 + dot(df, df)));
+    return f;
 }
 
-float map(vec3 p) {
-    float scene = p.y;
+vec4 map(vec3 p) {
+    vec4 scene = vec4(p.y, 0.0,0.0,0.0);
+    vec4 color = vec4(0.0);
     
     vec2 pointOverTime = p.xz + u_time;
-
     float h = fbmL(pointOverTime);
-    scene -= h;
+
+    // vec3 nor = normal(point, scene);
+    
+    scene.x -= h;
+     scene.yzw = vec3(0.184,0.342,0.460);
 
   	return scene;
 }
 
-float raymarch(vec3 ro, vec3 rd) {
-  float d = 0.;
-  float t = 0.;
-  for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
-    d = map(ro + t * rd);
-    if (d < EPSILON * t || t > MAX_DIST) break;
-    t += 0.5 * d;
-  }
+vec4 raymarsh(vec3 eye, vec3 marchingDirection) {
+    float depth = 0.0;
 
-  return d < EPSILON * t ? t : -1.;
+    for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
+        vec4 dist = map(eye + depth * marchingDirection);
+        if (dist.x < EPSILON) {
+			return vec4(depth, dist.yzw);
+        }
+        depth += dist.x;
+        if (depth >= MAX_DIST) {
+            return vec4(-1, vec3(0.0));
+        }
+    }
+
+    return vec4(-1, vec3(0.0));
 }
 
 vec3 normal(vec3 pos, float t) {
@@ -83,32 +89,12 @@ vec3 normal(vec3 pos, float t) {
                             fbmL(pos.xz-eps.yx) - fbmL(pos.xz+eps.yx) ) );
 }
 
-struct light {
-  vec3 lightPosition;
-  vec3 amibnetColor;
-  float ambientIntencity;
-  vec3 directLightColor;
-  vec3 directLightIntencity;
-};
 
-vec3 diffuseLight(vec3 k_d, vec3 p, vec3 eye, vec3 lightPos, vec3 lightIntensity) {
-  vec3 N = normal(p, 0.01);
-  vec3 L = normalize(lightPos - p);
+vec3 calcLights(vec3 p, vec3 eye, vec3 N) {
+  vec3 L = normalize(vec3(5., 55.0,  50.));
+ vec3 light = vec3(1.0) * max(dot(N, L), 0.);
 
-  float dotLN = dot(L, N);
-
-  if (dotLN < 0.0) {
-    return vec3(0.0, 0.0, 0.0);
-  }
-
-  return lightIntensity * (k_d * dotLN);
-}
-
-vec3 calcLights(light data, vec3 p, vec3 eye) {
-  vec3 ambientColor = data.ambientIntencity * data.amibnetColor;
-  vec3 phongColor = diffuseLight(data.directLightColor, p, eye, data.lightPosition, data.directLightIntencity);
-
-  return ambientColor + phongColor;
+  return light;
 }
 
 mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
@@ -120,24 +106,39 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
   return mat3(uu, vv, ww);
 }
 
-void setColor(vec3 p, vec3 n, out vec3 color) {
-  color = vec3(0.098,0.237,0.865);
-}
 
 float getSun(vec2 uv) {
-    vec2 dist = uv -vec2(0.640,0.750);
+      vec2 dist = uv -vec2(0.640,0.750);
     const float radius = 0.02;
     float isCircle = 1.-smoothstep(radius-(radius*0.6),
-                         radius+(radius*0.),
-                         dot(dist,dist)*4.5);
+                         radius+(radius*.4),
+                         dot(dist,dist)*4.0);
     
 	return isCircle;
 }
 
-void setSkyColor(vec2 uv, out vec3 color, vec3 dir) {
+void setSkyColor(out vec3 color, vec3 dir) {
+    vec2 uv =  gl_FragCoord.xy/u_resolution.xy;
    color = mix(vec3(0.040,0.057,0.095), vec3(0.440,0.830,0.822), uv.y);
    float sun = getSun(uv);
-   color = mix(color, vec3(0.965,0.575,0.169), sun);
+   color = mix(color, vec3(0.965,0.807,0.096), sun);
+}
+
+vec3 trace(vec3 ro, vec3 rd) {
+  vec3 color = vec3(0.0);
+    
+  vec4 scene = raymarsh(ro, rd);
+  vec3 point = ro + scene.x * rd;
+  if (scene.x > -1.) {
+    vec3 nor = normal(point, scene.x);
+      color = scene.yzw;
+
+    color *= calcLights(point, ro, nor);
+  } else {
+    setSkyColor(color, rd);
+  }
+    
+ return color;
 }
 
 void main() {
@@ -153,25 +154,7 @@ void main() {
   mat3 cam = calcLookAtMatrix(ro, target, 0.);
   vec3 rd = cam * normalize(vec3(p.xy, 1.0));
 
-  vec3 color = vec3(0.0);
-  float scene = raymarch(ro, rd);
-  vec3 point = ro + scene * rd;
-  if (scene > -1.) {
-    light light1 = light(
-      ro + vec3(10., 150., 100.), // light position
-      vec3(0.931,0.975,0.906), 0.412, // ambient color - ambient intencity
-      vec3(0.254,1.000,0.777), vec3(0.162,0.555,0.560)); // direct light color - direct light intencity
-
-
-    vec3 nor = normal(point, scene);
-
-    setColor(point, nor, color);
-
-    color *= calcLights(light1, point, ro);
-  } else {
-    point = ro + scene * rd;
-    setSkyColor(uv, color, rd);
-  }
+  vec3 color = trace(ro, rd);
 
   color = pow(color, vec3(1. / 2.2)); // gamma correction
   color = smoothstep(0., 1.,color);
