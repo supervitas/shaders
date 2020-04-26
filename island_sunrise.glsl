@@ -25,7 +25,7 @@ vec3 noise(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
 
-  vec2 df = 20.0*f*f*(f*(f-2.0)+1.0);
+  vec2 df = 1.0*f*f*(f*(f-2.0)+1.0);
   f = f*f*f*(f*(f*6.-15.)+10.);
 
   float a = random(i + vec2(0.5));
@@ -43,9 +43,54 @@ vec3 noise(vec2 p) {
 float fbmL(vec2 p) {
     vec3 n = noise(p);
     vec2 df = n.yz;
-    float f = abs(0.5 * n.x / (2.8 + dot(df, df)));
+    float f = abs(0.5 * n.x / (2.5 + dot(df, df)));
     return f;
 }
+
+float sdOctahedron(in vec3 p, in float s) {
+    p = abs(p);
+    return (p.x+p.y+p.z-s)*0.57735027;
+}
+
+float sdBox( vec3 p, vec3 b ) {
+  vec3 d = abs(p) - b;
+  return length(max(d,0.0)) + min(max(d.x,max(d.y,d.z)),0.0);
+}
+
+float sdSphere( vec3 p, float s ) {
+  return length(p)-s;
+}
+
+mat2 terrainProps = mat2(0.620,-0.952, 0.868,0.008);
+float fbmIs(vec2 p) {
+  vec2 df = vec2(0.0);
+  float f = 0.0;
+  float w = .5;
+
+  for (int i = 0; i < 4; i++) {
+    vec3 n = noise(p);
+    df += n.yz;
+    f += abs(w * n.x / (1.0 + dot(df, df)));
+    w *= 0.5;
+    p = 2. * terrainProps * p;
+  }
+  return f;
+}
+
+vec4 islands(vec3 p) {
+    float fbmNoise = fbmIs(p.xz);
+    vec3 position = p + vec3(5.422, -1.8,-7.5);
+    float sphere = sdSphere(position, 3.5);
+    float result = fbmNoise + sphere;
+    
+    vec4 islands = vec4(result, mix(vec3(0.086,0.335,0.062), vec3(0.745,0.558,0.178),  step(position.y, 0.500)));
+    return islands;
+}
+
+vec4 unionSDF(vec4 d1, vec4 d2) {
+    return (d1.x<d2.x) ? d1 : d2;
+}
+
 
 vec4 map(vec3 p) {
     vec4 scene = vec4(p.y, 0.0,0.0,0.0);
@@ -55,9 +100,11 @@ vec4 map(vec3 p) {
     float h = fbmL(pointOverTime);
 
     // vec3 nor = normal(point, scene);
-    
+
     scene.x -= h;
     scene.yzw = mix(vec3(0.094,0.372,0.440), vec3(1.0), h);
+    
+    scene = unionSDF(scene, islands(p));
 
   	return scene;
 }
