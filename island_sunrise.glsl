@@ -78,7 +78,7 @@ float unionSDF(float d1, float d2) {
 
 
 vec4 islands(vec3 p) {    
-    vec3 position = p + vec3(-7.922, -3.2,-20.5);
+    vec3 position = p + vec3(-13., -3.2,-25.5);
     
     float noise = fbmL(position.xz) * 2.5;
     float is = unionSDF(
@@ -88,7 +88,7 @@ vec4 islands(vec3 p) {
     
     is = unionSDF(
        is,
-       sdSphere(position + vec3(1., 3.3, -3.0), 10.5) + noise
+       sdSphere(position + vec3(5., 1.3, -3.0), 10.5) + noise
     );
     
       is = unionSDF(
@@ -214,7 +214,9 @@ void main() {
   vec3 color = trace(ro, rd);
 
   color = pow(color, vec3(1. / 2.2)); // gamma correction
-  color = smoothstep(0., 1.,color);
+    color *= 0.1+0.7*pow( 16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), .55 ); // Vigneting
+
+  color = smoothstep(0., 0.65,color);
 
   gl_FragColor = vec4(color,1.0);
 }
