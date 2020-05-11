@@ -43,7 +43,7 @@ vec3 noise(vec2 p) {
 float fbmL(vec2 p) {
     vec3 n = noise(p);
     vec2 df = n.yz;
-    float f = abs(0.5 * n.x / (2.5 + dot(df, df)));
+    float f = abs(n.x / (5.8 + dot(df, df)));
     return f;
 }
 
@@ -61,34 +61,46 @@ float sdSphere( vec3 p, float s ) {
   return length(p)-s;
 }
 
-mat2 terrainProps = mat2(0.620,-0.952, 0.868,0.008);
-float fbmIs(vec2 p) {
-  vec2 df = vec2(0.0);
-  float f = 0.0;
-  float w = .5;
 
-  for (int i = 0; i < 4; i++) {
-    vec3 n = noise(p);
-    df += n.yz;
-    f += abs(w * n.x / (1.0 + dot(df, df)));
-    w *= 0.5;
-    p = 2. * terrainProps * p;
-  }
-  return f;
+float sdVerticalCapsule( vec3 p, float h, float r ){
+  p.y -= clamp( p.y, 0.0, h );
+  return length( p ) - r;
 }
 
-vec4 islands(vec3 p) {
-    float fbmNoise = fbmIs(p.xz);
-    vec3 position = p + vec3(5.422, -1.8,-7.5);
-    float sphere = sdSphere(position, 3.5);
-    float result = fbmNoise + sphere;
-    
-    vec4 islands = vec4(result, mix(vec3(0.086,0.335,0.062), vec3(0.745,0.558,0.178),  step(position.y, 0.500)));
-    return islands;
-}
 
 vec4 unionSDF(vec4 d1, vec4 d2) {
     return (d1.x<d2.x) ? d1 : d2;
+}
+
+float unionSDF(float d1, float d2) {
+    return (d1<d2) ? d1 : d2;
+}
+
+
+vec4 islands(vec3 p) {    
+    vec3 position = p + vec3(-7.922, -3.2,-20.5);
+    
+    float noise = fbmL(position.xz) * 2.5;
+    float is = unionSDF(
+       sdSphere(position + vec3(1., .5, 2.0), 5.9) - noise,
+       sdSphere(position + vec3(5.2, -.5, -2.0), 6.5) + noise
+    );
+    
+    is = unionSDF(
+       is,
+       sdSphere(position + vec3(1., 3.3, -3.0), 10.5) + noise
+    );
+    
+      is = unionSDF(
+       is,
+       sdSphere(position + vec3(2.5,14.5, -1.5), 15.5)
+    );
+    
+
+ 
+    vec4 island2 = vec4(is, mix( vec3(0.745,0.558,0.178), vec3(0.086,0.335,0.062),  min(max(position.y + noise, 0.), 1.0)));
+    
+    return island2;
 }
 
 
@@ -96,7 +108,7 @@ vec4 map(vec3 p) {
     vec4 scene = vec4(p.y, 0.0,0.0,0.0);
     vec4 color = vec4(0.0);
     
-    vec2 pointOverTime = p.xz + u_time;
+    vec2 pointOverTime = p.xz + u_time ;
     float h = fbmL(pointOverTime);
 
     // vec3 nor = normal(point, scene);
@@ -135,7 +147,7 @@ vec3 normal(vec3 pos, float t) {
 
 
 vec3 calcLights(vec3 p, vec3 eye, vec3 N) {
-  vec3 L = normalize(vec3(5., 55.0,  50.));
+ vec3 L = normalize(vec3(5., 55.0,  50.));
  vec3 light = vec3(1.0) * max(dot(N, L), 0.);
 
   return light;
@@ -152,17 +164,19 @@ mat3 calcLookAtMatrix(vec3 origin, vec3 target, float roll) {
 
 
 float getSun(vec2 uv) {
-      vec2 dist = uv -vec2(0.640,0.750);
+    float t = .55 ;// u_time * 0.25;
+    vec2 position =  vec2(sin(t), cos(t));
+    vec2 dist = uv - position;
+    
     const float radius = 0.02;
     float isCircle = 1.-smoothstep(radius-(radius*0.6),
                          radius+(radius*.4),
                          dot(dist,dist)*4.0);
-    
 	return isCircle;
 }
 
 void setSkyColor(out vec3 color, vec3 dir) {
-    vec2 uv =  gl_FragCoord.xy/u_resolution.xy;
+   vec2 uv =  gl_FragCoord.xy/u_resolution.xy;
    color = mix(vec3(0.040,0.057,0.095), vec3(0.440,0.830,0.822), uv.y);
    float sun = getSun(uv);
    color = mix(color, vec3(0.965,0.807,0.096), sun);
@@ -192,7 +206,6 @@ void main() {
   float speed = 0.002;
   float terrainEndTime = abs(sin(u_time * speed));
   vec3 ro = vec3(0.,1.8,1.);
-
 
   vec3 target = ro + vec3(0., 0., 0.1); // revert camera when near to end
   mat3 cam = calcLookAtMatrix(ro, target, 0.);
